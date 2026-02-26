@@ -1,0 +1,37 @@
+name: Build PHAR
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build PHAR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          coverage: none
+          extensions: zlib
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --optimize-autoloader
+
+      - name: Compile PHAR
+        run: vendor/bin/box compile
+
+      - name: Smoke test
+        run: php builds/php-dep.phar --version
+
+      - name: Upload PHAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-dep-phar
+          path: builds/php-dep.phar
+          retention-days: 90
