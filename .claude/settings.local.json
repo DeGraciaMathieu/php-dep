@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null)",
+      "Bash(php:*)",
+      "Bash(composer install:*)",
+      "Bash(chmod +x:*)",
+      "Bash(./bin/php-dep analyze:*)",
+      "Bash(head:*)"
+    ]
+  }
+}

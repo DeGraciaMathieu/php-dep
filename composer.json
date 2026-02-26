@@ -1,0 +1,22 @@
+{
+    "name": "php-dep/php-dep",
+    "description": "PHP dependency analyzer - extract and visualize class relationships",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.2",
+        "nikic/php-parser": "^5.0",
+        "phpstan/phpdoc-parser": "^1.0",
+        "symfony/console": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "PhpDep\\": "src/"
+        }
+    },
+    "bin": ["bin/php-dep"],
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}
