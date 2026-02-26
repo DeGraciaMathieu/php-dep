@@ -1,6 +1,6 @@
 # php-dep
 
-Analyseur de dépendances PHP en ligne de commande. Extrait et visualise toutes les relations entre classes d'un projet : héritage, interfaces, traits, injections, instanciations, appels statiques, docblocks.
+PHP command-line dependency analyzer. Extracts and visualizes all class relationships in a project: inheritance, interfaces, traits, injections, instantiations, static calls, docblocks.
 
 ## Installation
 
@@ -11,116 +11,116 @@ composer install
 chmod +x bin/php-dep
 ```
 
-Pour un accès global :
+For global access:
 
 ```bash
-ln -s /chemin/absolu/vers/bin/php-dep /usr/local/bin/php-dep
+ln -s /absolute/path/to/bin/php-dep /usr/local/bin/php-dep
 ```
 
-## Usage rapide
+## Quick start
 
 ```bash
-# Analyser le répertoire courant
+# Analyze the current directory
 ./bin/php-dep analyze
 
-# Analyser un projet spécifique
+# Analyze a specific project
 ./bin/php-dep analyze /path/to/project/src
 
-# Sortie JSON (pour scripts, CI, jq…)
+# JSON output (for scripts, CI, jq…)
 ./bin/php-dep analyze src/ --format=json -q
 
-# Zoomer sur une classe
+# Zoom in on a class
 ./bin/php-dep analyze src/ --class='App\Service\UserService'
 ```
 
-## Commande `analyze`
+## `analyze` command
 
 ```
 php-dep analyze [<path>] [options]
 ```
 
-`<path>` est optionnel, défaut : `.`
+`<path>` is optional, defaults to `.`
 
 ### Options
 
-| Option | Raccourci | Description |
+| Option | Shortcut | Description |
 |---|---|---|
-| `--format=text\|json` | `-f` | Format de sortie (défaut : `text`) |
-| `--class=FQCN` | `-c` | Focaliser sur une classe (FQCN complet) |
-| `--sort=alpha\|deps\|fanin` | `-s` | Tri du tableau : alphabétique, nb de dépendances sortantes, nb de dépendances entrantes (défaut : `alpha`) |
-| `--limit=N` | `-l` | Limiter l'affichage à N classes |
-| `--exclude=dir` | | Exclure un répertoire (cumulable) |
-| `--include-vendor` | | Inclure le dossier `vendor/` dans l'analyse |
-| `--skip-docblocks` | | Ignorer les annotations `@param`/`@return`/`@throws` |
-| `--quiet` | `-q` | Supprime la barre de progression et les warnings (stdout préservé) |
-| `--verbose` | `-v` | Affiche le détail des warnings |
+| `--format=text\|json` | `-f` | Output format (default: `text`) |
+| `--class=FQCN` | `-c` | Focus on a class (full FQCN) |
+| `--sort=alpha\|deps\|fanin` | `-s` | Table sort: alphabetical, number of outgoing dependencies, number of incoming dependencies (default: `alpha`) |
+| `--limit=N` | `-l` | Limit output to N classes |
+| `--exclude=dir` | | Exclude a directory (can be used multiple times) |
+| `--include-vendor` | | Include the `vendor/` directory in the analysis |
+| `--skip-docblocks` | | Ignore `@param`/`@return`/`@throws` annotations |
+| `--quiet` | `-q` | Suppresses the progress bar and warnings (stdout preserved) |
+| `--verbose` | `-v` | Show warning details |
 
-### Codes de sortie
+### Exit codes
 
-| Code | Signification |
+| Code | Meaning |
 |---|---|
-| `0` | Succès |
-| `1` | Erreur(s) de parsing |
-| `2` | Erreur interne |
-| `3` | Arguments invalides |
+| `0` | Success |
+| `1` | Parsing error(s) |
+| `2` | Internal error |
+| `3` | Invalid arguments |
 
 ---
 
-## Exemples
+## Examples
 
-### Vue d'ensemble d'un projet
+### Project overview
 
 ```bash
 ./bin/php-dep analyze src/
 ```
 
-Affiche un tableau avec, pour chaque classe : type, nombre de dépendances sortantes (ce qu'elle utilise), entrantes (ce qui l'utilise), et fichier source.
+Displays a table with, for each class: type, number of outgoing dependencies (what it uses), incoming dependencies (what uses it), and source file.
 
-### Trouver les classes les plus couplées
+### Find the most coupled classes
 
 ```bash
-# Les plus grosses consommatrices de dépendances
+# Highest dependency consumers
 ./bin/php-dep analyze src/ --sort=deps --limit=10
 
-# Les plus utilisées par les autres (fan-in élevé)
+# Most used by others (high fan-in)
 ./bin/php-dep analyze src/ --sort=fanin --limit=10
 ```
 
-### Inspecter une classe
+### Inspect a class
 
 ```bash
 ./bin/php-dep analyze src/ --class='PhpDep\Parser\PhpFileParser' -v
 ```
 
-Affiche deux tableaux : ce que la classe utilise (dépendances sortantes) et qui l'utilise (dépendances entrantes), avec le type de relation et la ligne source.
+Displays two tables: what the class uses (outgoing dependencies) and who uses it (incoming dependencies), with the relationship type and source line.
 
-### Pipeline JSON avec `jq`
+### JSON pipeline with `jq`
 
 ```bash
-# Compter les classes
+# Count classes
 ./bin/php-dep analyze src/ -f json -q | jq '.meta.class_count'
 
-# Lister toutes les relations d'héritage
+# List all inheritance relationships
 ./bin/php-dep analyze src/ -f json -q | jq '[.edges[] | select(.type == "extends")]'
 
-# Trouver les classes sans dépendants (feuilles)
+# Find classes with no dependants (leaves)
 ./bin/php-dep analyze src/ -f json -q | jq '[.classes[] | select(.dependants | length == 0) | .fqcn]'
 
-# Trouver les dépendances d'une classe précise
+# Find dependencies of a specific class
 ./bin/php-dep analyze src/ -f json -q | jq '.classes[] | select(.fqcn == "App\\Service\\UserService") | .dependencies'
 ```
 
-### Exclure des répertoires
+### Exclude directories
 
 ```bash
 ./bin/php-dep analyze . --exclude=tests --exclude=fixtures --exclude=migrations
 ```
 
-### Analyse sans le vendor
+### Analysis without vendor
 
-Par défaut, `vendor/` est exclu de l'analyse mais les classes tierces apparaissent comme nœuds `external` dans le graphe. Pour les ignorer complètement, aucune option supplémentaire n'est nécessaire.
+By default, `vendor/` is excluded from the analysis but third-party classes appear as `external` nodes in the graph. No additional option is needed to ignore them entirely.
 
-Pour analyser le vendor lui-même :
+To analyze the vendor itself:
 
 ```bash
 ./bin/php-dep analyze . --include-vendor
@@ -128,7 +128,7 @@ Pour analyser le vendor lui-même :
 
 ---
 
-## Structure de la sortie JSON
+## JSON output structure
 
 ```jsonc
 {
@@ -137,8 +137,8 @@ Pour analyser le vendor lui-même :
     "generated_at": "2026-02-26T10:00:00+00:00",
     "analyzed_path": "/path/to/project",
     "file_count": 42,
-    "class_count": 38,      // nœuds internes uniquement
-    "node_count": 95,       // internes + externes (vendor, built-in)
+    "class_count": 38,      // internal nodes only
+    "node_count": 95,       // internal + external (vendor, built-in)
     "edge_count": 312,
     "warning_count": 2
   },
@@ -156,7 +156,7 @@ Pour analyser le vendor lui-même :
     {
       "source":     "App\\Service\\UserService",
       "target":     "App\\Repository\\UserRepository",
-      "type":       "param_type",   // voir types de relations ci-dessous
+      "type":       "param_type",   // see relationship types below
       "confidence": "certain",      // certain | high | medium | low
       "file":       "/path/to/UserService.php",
       "line":       23,
@@ -176,18 +176,18 @@ Pour analyser le vendor lui-même :
 
 ---
 
-## Types de relations (`edge.type`)
+## Relationship types (`edge.type`)
 
-### Tier 1 — Certitude maximale (AST)
+### Tier 1 — Maximum certainty (AST)
 
 | Type | Description |
 |---|---|
-| `extends` | Héritage de classe ou d'interface |
-| `implements` | Implémentation d'interface |
-| `uses_trait` | Utilisation d'un trait |
-| `param_type` | Type hint sur un paramètre de méthode |
-| `return_type` | Type de retour d'une méthode |
-| `property_type` | Type d'une propriété de classe |
+| `extends` | Class or interface inheritance |
+| `implements` | Interface implementation |
+| `uses_trait` | Trait usage |
+| `param_type` | Type hint on a method parameter |
+| `return_type` | Method return type |
+| `property_type` | Class property type |
 | `instantiates` | `new Foo()` |
 | `static_call` | `Foo::method()` |
 | `static_property` | `Foo::$prop` |
@@ -195,9 +195,9 @@ Pour analyser le vendor lui-même :
 | `instanceof` | `$x instanceof Foo` |
 | `catches` | `catch (FooException $e)` |
 
-### Tier 2 — Haute confiance (docblocks)
+### Tier 2 — High confidence (docblocks)
 
-Extraits depuis `@param`, `@return`, `@var`, `@throws`. Confidence : `high`.
+Extracted from `@param`, `@return`, `@var`, `@throws`. Confidence: `high`.
 
 | Type | Source |
 |---|---|
@@ -206,38 +206,38 @@ Extraits depuis `@param`, `@return`, `@var`, `@throws`. Confidence : `high`.
 | `docblock_var` | `@var FooType` |
 | `docblock_throws` | `@throws FooException` |
 
-### Niveaux de confiance
+### Confidence levels
 
-| Valeur | Signification |
+| Value | Meaning |
 |---|---|
-| `certain` | Relation structurelle garantie par l'AST |
-| `high` | Docblock, fortement probable |
-| `medium` | Pattern ambigu (`instanceof`) |
-| `low` | Pattern dynamique |
+| `certain` | Structural relationship guaranteed by the AST |
+| `high` | Docblock, highly probable |
+| `medium` | Ambiguous pattern (`instanceof`) |
+| `low` | Dynamic pattern |
 
 ---
 
 ## Warnings
 
-| Type | Déclencheur |
+| Type | Trigger |
 |---|---|
-| `dynamic_instantiation` | `new $variable()` — classe inconnue à l'analyse statique |
-| `dynamic_call` | Appel dynamique non résolvable |
-| `parse_error` | Fichier PHP invalide ou illisible |
+| `dynamic_instantiation` | `new $variable()` — class unknown at static analysis time |
+| `dynamic_call` | Unresolvable dynamic call |
+| `parse_error` | Invalid or unreadable PHP file |
 
-Les warnings sont affichés dans `stderr`. La sortie JSON les inclut dans `warnings[]`. Avec `-v`, le texte les liste en fin de rapport.
+Warnings are printed to `stderr`. The JSON output includes them in `warnings[]`. With `-v`, the text output lists them at the end of the report.
 
 ---
 
-## Fonctionnement interne
+## How it works
 
-- **Découverte** : `git ls-files` si dans un dépôt git, sinon `RecursiveDirectoryIterator`. Les dossiers `vendor/`, `node_modules/`, `.git/` sont exclus par défaut.
-- **Parsing** : [nikic/PHP-Parser](https://github.com/nikic/PHP-Parser) v5. Le `NameResolver` tourne en premier dans le traverser : tous les noms en aval sont des FQCN résolus.
-- **Docblocks** : [phpstan/phpdoc-parser](https://github.com/phpstan/phpdoc-parser) pour `@param`, `@return`, `@var`, `@throws`.
-- **Mémoire** : l'AST de chaque fichier est libéré immédiatement après extraction (streaming). Un seul AST en mémoire à la fois.
-- **Vendor** : en mode `boundary` (défaut), les classes vendor sont des nœuds `external` (feuilles) — leurs fichiers ne sont pas analysés.
+- **Discovery**: `git ls-files` if inside a git repository, otherwise `RecursiveDirectoryIterator`. The `vendor/`, `node_modules/`, and `.git/` directories are excluded by default.
+- **Parsing**: [nikic/PHP-Parser](https://github.com/nikic/PHP-Parser) v5. The `NameResolver` runs first in the traverser: all downstream names are resolved FQCNs.
+- **Docblocks**: [phpstan/phpdoc-parser](https://github.com/phpstan/phpdoc-parser) for `@param`, `@return`, `@var`, `@throws`.
+- **Memory**: each file's AST is freed immediately after extraction (streaming). Only one AST in memory at a time.
+- **Vendor**: in `boundary` mode (default), vendor classes are `external` nodes (leaves) — their files are not analyzed.
 
-## Prérequis
+## Requirements
 
 - PHP >= 8.2
 - Composer
