@@ -7,7 +7,12 @@
       "Bash(composer install:*)",
       "Bash(chmod +x:*)",
       "Bash(./bin/php-dep analyze:*)",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "Bash(composer require:*)",
+      "Bash(composer install -q 2>&1 | tail -5 && ./vendor/bin/phpunit --testdox 2>&1)",
+      "Bash(./vendor/bin/phpunit:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)"
     ]
   }
 }
