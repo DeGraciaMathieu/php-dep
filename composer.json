@@ -1,5 +1,5 @@
 {
-    "name": "php-dep/php-dep",
+    "name": "degraciamathieu/php-dep",
     "description": "PHP dependency analyzer - extract and visualize class relationships",
     "type": "project",
     "license": "MIT",
