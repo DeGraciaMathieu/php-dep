@@ -39,10 +39,10 @@ final class PhpFileParserTest extends TestCase
     {
         $result = $this->parser->parse('/does/not/exist/file.php');
 
-        self::assertEmpty($result['nodes']);
-        self::assertEmpty($result['edges']);
-        self::assertCount(1, $result['warnings']);
-        self::assertSame(WarningType::PARSE_ERROR, $result['warnings'][0]->type);
+        self::assertEmpty($result->nodes);
+        self::assertEmpty($result->edges);
+        self::assertCount(1, $result->warnings);
+        self::assertSame(WarningType::PARSE_ERROR, $result->warnings[0]->type);
     }
 
     public function testParseInvalidPhpReturnsWarning(): void
@@ -50,10 +50,10 @@ final class PhpFileParserTest extends TestCase
         $this->write('<?php this is not valid php ??? @@@ !!!');
         $result = $this->parser->parse($this->tmpFile);
 
-        self::assertEmpty($result['nodes']);
-        self::assertEmpty($result['edges']);
-        self::assertCount(1, $result['warnings']);
-        self::assertSame(WarningType::PARSE_ERROR, $result['warnings'][0]->type);
+        self::assertEmpty($result->nodes);
+        self::assertEmpty($result->edges);
+        self::assertCount(1, $result->warnings);
+        self::assertSame(WarningType::PARSE_ERROR, $result->warnings[0]->type);
     }
 
     public function testParseEmptyPhpFileReturnsNothing(): void
@@ -61,9 +61,9 @@ final class PhpFileParserTest extends TestCase
         $this->write('<?php');
         $result = $this->parser->parse($this->tmpFile);
 
-        self::assertEmpty($result['nodes']);
-        self::assertEmpty($result['edges']);
-        self::assertEmpty($result['warnings']);
+        self::assertEmpty($result->nodes);
+        self::assertEmpty($result->edges);
+        self::assertEmpty($result->warnings);
     }
 
     // ── Node extraction ───────────────────────────────────────────────────────
@@ -73,9 +73,9 @@ final class PhpFileParserTest extends TestCase
         $this->write('<?php namespace App; class Foo {}');
         $result = $this->parser->parse($this->tmpFile);
 
-        self::assertCount(1, $result['nodes']);
-        self::assertSame('App\\Foo', $result['nodes'][0]->fqcn);
-        self::assertSame(NodeType::CLASS_NODE, $result['nodes'][0]->type);
+        self::assertCount(1, $result->nodes);
+        self::assertSame('App\\Foo', $result->nodes[0]->fqcn);
+        self::assertSame(NodeType::CLASS_NODE, $result->nodes[0]->type);
     }
 
     public function testParseInterface(): void
@@ -83,8 +83,8 @@ final class PhpFileParserTest extends TestCase
         $this->write('<?php namespace App; interface IFoo {}');
         $result = $this->parser->parse($this->tmpFile);
 
-        self::assertCount(1, $result['nodes']);
-        self::assertSame(NodeType::INTERFACE_NODE, $result['nodes'][0]->type);
+        self::assertCount(1, $result->nodes);
+        self::assertSame(NodeType::INTERFACE_NODE, $result->nodes[0]->type);
     }
 
     public function testParseTrait(): void
@@ -92,8 +92,8 @@ final class PhpFileParserTest extends TestCase
         $this->write('<?php namespace App; trait MyTrait {}');
         $result = $this->parser->parse($this->tmpFile);
 
-        self::assertCount(1, $result['nodes']);
-        self::assertSame(NodeType::TRAIT_NODE, $result['nodes'][0]->type);
+        self::assertCount(1, $result->nodes);
+        self::assertSame(NodeType::TRAIT_NODE, $result->nodes[0]->type);
     }
 
     public function testParseEnum(): void
@@ -101,8 +101,8 @@ final class PhpFileParserTest extends TestCase
         $this->write('<?php namespace App; enum Status: string { case Active = "active"; }');
         $result = $this->parser->parse($this->tmpFile);
 
-        self::assertCount(1, $result['nodes']);
-        self::assertSame(NodeType::ENUM_NODE, $result['nodes'][0]->type);
+        self::assertCount(1, $result->nodes);
+        self::assertSame(NodeType::ENUM_NODE, $result->nodes[0]->type);
     }
 
     public function testNodeStoresFilePath(): void
@@ -110,7 +110,7 @@ final class PhpFileParserTest extends TestCase
         $this->write('<?php namespace App; class Foo {}');
         $result = $this->parser->parse($this->tmpFile);
 
-        self::assertSame($this->tmpFile, $result['nodes'][0]->file);
+        self::assertSame($this->tmpFile, $result->nodes[0]->file);
     }
 
     // ── Edge extraction ───────────────────────────────────────────────────────
@@ -121,7 +121,7 @@ final class PhpFileParserTest extends TestCase
         $result = $this->parser->parse($this->tmpFile);
 
         $extendsEdges = array_values(array_filter(
-            $result['edges'],
+            $result->edges,
             fn($e) => $e->type === EdgeType::EXTENDS_CLASS,
         ));
 
@@ -136,7 +136,7 @@ final class PhpFileParserTest extends TestCase
         $result = $this->parser->parse($this->tmpFile);
 
         $implEdges = array_values(array_filter(
-            $result['edges'],
+            $result->edges,
             fn($e) => $e->type === EdgeType::IMPLEMENTS_INTERFACE,
         ));
 
@@ -151,7 +151,7 @@ final class PhpFileParserTest extends TestCase
         $result = $this->parser->parse($this->tmpFile);
 
         $traitEdges = array_values(array_filter(
-            $result['edges'],
+            $result->edges,
             fn($e) => $e->type === EdgeType::USES_TRAIT,
         ));
 
@@ -173,7 +173,7 @@ final class PhpFileParserTest extends TestCase
         $result = $this->parser->parse($this->tmpFile);
 
         $newEdges = array_values(array_filter(
-            $result['edges'],
+            $result->edges,
             fn($e) => $e->type === EdgeType::INSTANTIATES,
         ));
 
@@ -195,7 +195,7 @@ final class PhpFileParserTest extends TestCase
         $result = $this->parser->parse($this->tmpFile);
 
         $paramEdges = array_values(array_filter(
-            $result['edges'],
+            $result->edges,
             fn($e) => $e->type === EdgeType::PARAM_TYPE,
         ));
 

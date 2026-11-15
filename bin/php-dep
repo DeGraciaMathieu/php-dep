@@ -26,5 +26,4 @@ if (!$autoloaderFound) {
 
 use PhpDep\Cli\Application;
 
-$application = new Application();
-$application->run();
+exit((new Application())->run(array_slice($argv, 1), STDOUT, STDERR));

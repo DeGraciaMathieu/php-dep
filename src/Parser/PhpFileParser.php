@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace PhpDep\Parser;
 
-use PhpDep\Graph\GraphEdge;
-use PhpDep\Graph\GraphNode;
 use PhpDep\Parser\Visitor\ClassDeclarationVisitor;
 use PhpDep\Parser\Visitor\RelationshipVisitor;
 use PhpDep\Warning\AnalysisWarning;
@@ -25,48 +23,36 @@ final class PhpFileParser
         $this->typeResolver = new TypeResolver();
     }
 
-    /**
-     * Parse a PHP file and extract nodes + edges + warnings.
-     *
-     * @return array{nodes: GraphNode[], edges: GraphEdge[], warnings: AnalysisWarning[]}
-     */
-    public function parse(string $file): array
+    /** Parse a PHP file and extract nodes + edges + warnings */
+    public function parse(string $file): ParsedFile
     {
         $code = @file_get_contents($file);
         if ($code === false) {
-            return [
-                'nodes'    => [],
-                'edges'    => [],
-                'warnings' => [
-                    new AnalysisWarning(
-                        WarningType::PARSE_ERROR,
-                        $file,
-                        null,
-                        "Cannot read file: {$file}",
-                    ),
-                ],
-            ];
+            return new ParsedFile(warnings: [
+                new AnalysisWarning(
+                    WarningType::PARSE_ERROR,
+                    $file,
+                    null,
+                    "Cannot read file: {$file}",
+                ),
+            ]);
         }
 
         try {
             $stmts = $this->parser->parse($code);
         } catch (\PhpParser\Error $e) {
-            return [
-                'nodes'    => [],
-                'edges'    => [],
-                'warnings' => [
-                    new AnalysisWarning(
-                        WarningType::PARSE_ERROR,
-                        $file,
-                        $e->getStartLine() > 0 ? $e->getStartLine() : null,
-                        "Parse error: {$e->getRawMessage()}",
-                    ),
-                ],
-            ];
+            return new ParsedFile(warnings: [
+                new AnalysisWarning(
+                    WarningType::PARSE_ERROR,
+                    $file,
+                    $e->getStartLine() > 0 ? $e->getStartLine() : null,
+                    "Parse error: {$e->getRawMessage()}",
+                ),
+            ]);
         }
 
         if ($stmts === null) {
-            return ['nodes' => [], 'edges' => [], 'warnings' => []];
+            return new ParsedFile();
         }
 
         $scope               = new ClassScope();
@@ -80,10 +66,10 @@ final class PhpFileParser
         $traverser->addVisitor($relationshipVisitor);
         $traverser->traverse($stmts);
 
-        return [
-            'nodes'    => $classVisitor->getNodes(),
-            'edges'    => $relationshipVisitor->getEdges(),
-            'warnings' => $relationshipVisitor->getWarnings(),
-        ];
+        return new ParsedFile(
+            nodes:    $classVisitor->getNodes(),
+            edges:    $relationshipVisitor->getEdges(),
+            warnings: $relationshipVisitor->getWarnings(),
+        );
     }
 }
