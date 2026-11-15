@@ -30,10 +30,10 @@ ln -s /absolute/path/to/bin/php-dep /usr/local/bin/php-dep
 ## `analyze` command
 
 ```
-php-dep analyze [<path>] [options]
+php-dep [analyze] [<path>] [options]
 ```
 
-`<path>` is optional, defaults to `.`
+`<path>` is optional, defaults to `.`. The `analyze` command name is optional too: it is the only command.
 
 ### Options
 
@@ -42,6 +42,8 @@ php-dep analyze [<path>] [options]
 | `--exclude=dir` | | Exclude a directory (can be used multiple times) |
 | `--include-vendor` | | Include the `vendor/` directory in the analysis |
 | `--workers=N` | `-w` | Number of parallel processes (default: the CPU count, `1` to stay sequential) |
+| `--help` | `-h` | Display the help |
+| `--version` | `-V` | Display the version |
 
 ### Exit codes
 
@@ -171,11 +173,12 @@ The JSON output includes them in `warnings[]`.
 
 ## How it works
 
-- **Discovery**: `git ls-files` if inside a git repository, otherwise `RecursiveDirectoryIterator`. The `vendor/`, `node_modules/`, and `.git/` directories are excluded by default.
+- **Discovery**: `git ls-files` if inside a git repository, so that ignored files are left out, otherwise `RecursiveDirectoryIterator`. The `vendor/`, `node_modules/`, `storage/`, `bootstrap/cache/`, `public/build/` and `.git/` directories are excluded by default, the same way in both cases.
+- **Dependencies**: [nikic/PHP-Parser](https://github.com/nikic/PHP-Parser) only. The command line is read without any console library.
 - **Parsing**: [nikic/PHP-Parser](https://github.com/nikic/PHP-Parser) v5. The `NameResolver` runs first in the traverser: all downstream names are resolved FQCNs.
 - **Parallelism**: with the `pcntl` extension, the files are spread over forked processes; without it, they are parsed one after the other. The output is the same whatever the number of workers.
 - **Memory**: each file's AST is freed immediately after extraction. Each process holds one AST at a time.
-- **Vendor**: in `boundary` mode (default), vendor classes are `external` nodes (leaves) — their files are not analyzed.
+- **Vendor**: vendor classes are `external` nodes (leaves) — their files are not analyzed, unless `--include-vendor` is given.
 
 ## Requirements
 
