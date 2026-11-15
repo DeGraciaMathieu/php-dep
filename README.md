@@ -94,7 +94,7 @@ To analyze the vendor itself:
 ```jsonc
 {
   "meta": {
-    "version": "1.0",
+    "version": "2.0",
     "generated_at": "2026-02-26T10:00:00+00:00",
     "analyzed_path": "/path/to/project",
     "file_count": 42,
@@ -116,13 +116,11 @@ To analyze the vendor itself:
   ],
   "edges": [
     {
-      "source":     "App\\Service\\UserService",
-      "target":     "App\\Repository\\UserRepository",
-      "type":       "param_type",   // see relationship types below
-      "confidence": "certain",      // certain | high | medium | low
-      "file":       "/path/to/UserService.php",
-      "line":       23,
-      "metadata":   {}
+      "source": "App\\Service\\UserService",
+      "target": "App\\Repository\\UserRepository",
+      "type":   "param_type",   // see relationship types below
+      "file":   "/path/to/UserService.php",
+      "line":   23
     }
   ],
   "warnings": [
@@ -139,8 +137,6 @@ To analyze the vendor itself:
 ---
 
 ## Relationship types (`edge.type`)
-
-### Tier 1 — Maximum certainty (AST)
 
 | Type | Description |
 |---|---|
@@ -159,14 +155,6 @@ To analyze the vendor itself:
 | `instanceof` | `$x instanceof Foo` |
 | `catches` | `catch (FooException $e)` |
 
-### Confidence levels
-
-| Value | Meaning |
-|---|---|
-| `certain` | Structural relationship guaranteed by the AST |
-| `medium` | Ambiguous pattern (`instanceof`) |
-| `low` | Dynamic pattern |
-
 ---
 
 ## Warnings
@@ -174,7 +162,6 @@ To analyze the vendor itself:
 | Type | Trigger |
 |---|---|
 | `dynamic_instantiation` | `new $variable()` — class unknown at static analysis time |
-| `dynamic_call` | Unresolvable dynamic call |
 | `parse_error` | Invalid or unreadable PHP file |
 
 The JSON output includes them in `warnings[]`.

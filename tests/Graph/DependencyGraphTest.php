@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PhpDep\Tests\Graph;
 
-use PhpDep\Graph\Confidence;
 use PhpDep\Graph\DependencyGraph;
 use PhpDep\Graph\EdgeType;
 use PhpDep\Graph\GraphEdge;
@@ -68,7 +67,7 @@ final class DependencyGraphTest extends TestCase
 
     public function testAddEdgeCreatesExternalNodesForUnknownEndpoints(): void
     {
-        $edge = new GraphEdge('App\\A', 'App\\B', EdgeType::INSTANTIATES, Confidence::HIGH);
+        $edge = new GraphEdge('App\\A', 'App\\B', EdgeType::INSTANTIATES);
         $this->graph->addEdge($edge);
 
         self::assertTrue($this->graph->hasNode('App\\A'));
@@ -82,14 +81,14 @@ final class DependencyGraphTest extends TestCase
         $nodeA = new GraphNode('App\\A', NodeType::CLASS_NODE);
         $this->graph->addNode($nodeA);
 
-        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::INSTANTIATES, Confidence::HIGH));
+        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::INSTANTIATES));
 
         self::assertFalse($this->graph->getNode('App\\A')->isExternal());
     }
 
     public function testGetEdgesFrom(): void
     {
-        $edge = new GraphEdge('App\\A', 'App\\B', EdgeType::EXTENDS_CLASS, Confidence::CERTAIN);
+        $edge = new GraphEdge('App\\A', 'App\\B', EdgeType::EXTENDS_CLASS);
         $this->graph->addEdge($edge);
 
         self::assertCount(1, $this->graph->getEdgesFrom('App\\A'));
@@ -99,7 +98,7 @@ final class DependencyGraphTest extends TestCase
 
     public function testGetEdgesTo(): void
     {
-        $edge = new GraphEdge('App\\A', 'App\\B', EdgeType::EXTENDS_CLASS, Confidence::CERTAIN);
+        $edge = new GraphEdge('App\\A', 'App\\B', EdgeType::EXTENDS_CLASS);
         $this->graph->addEdge($edge);
 
         self::assertCount(1, $this->graph->getEdgesTo('App\\B'));
@@ -120,8 +119,8 @@ final class DependencyGraphTest extends TestCase
     public function testDependenciesOfReturnsUniqueTargets(): void
     {
         // Two edges to same target → only one dependency
-        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::PARAM_TYPE, Confidence::HIGH));
-        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::RETURN_TYPE, Confidence::HIGH));
+        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::PARAM_TYPE));
+        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::RETURN_TYPE));
 
         self::assertSame(['App\\B'], $this->graph->dependenciesOf('App\\A'));
     }
@@ -133,8 +132,8 @@ final class DependencyGraphTest extends TestCase
 
     public function testDependantsOfReturnsUniqueSources(): void
     {
-        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::PARAM_TYPE, Confidence::HIGH));
-        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::RETURN_TYPE, Confidence::HIGH));
+        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::PARAM_TYPE));
+        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::RETURN_TYPE));
 
         self::assertSame(['App\\A'], $this->graph->dependantsOf('App\\B'));
     }
@@ -146,8 +145,8 @@ final class DependencyGraphTest extends TestCase
 
     public function testDependenciesOfMultipleTargets(): void
     {
-        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::EXTENDS_CLASS, Confidence::CERTAIN));
-        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\C', EdgeType::IMPLEMENTS_INTERFACE, Confidence::CERTAIN));
+        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::EXTENDS_CLASS));
+        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\C', EdgeType::IMPLEMENTS_INTERFACE));
 
         $deps = $this->graph->dependenciesOf('App\\A');
         sort($deps);
@@ -194,15 +193,15 @@ final class DependencyGraphTest extends TestCase
     public function testGetEdgeCount(): void
     {
         self::assertSame(0, $this->graph->getEdgeCount());
-        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::EXTENDS_CLASS, Confidence::CERTAIN));
-        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\C', EdgeType::PARAM_TYPE, Confidence::HIGH));
+        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::EXTENDS_CLASS));
+        $this->graph->addEdge(new GraphEdge('App\\A', 'App\\C', EdgeType::PARAM_TYPE));
         self::assertSame(2, $this->graph->getEdgeCount());
     }
 
     public function testGetAllEdgesPreservesInsertionOrder(): void
     {
-        $edge1 = new GraphEdge('App\\A', 'App\\B', EdgeType::EXTENDS_CLASS, Confidence::CERTAIN);
-        $edge2 = new GraphEdge('App\\A', 'App\\C', EdgeType::PARAM_TYPE, Confidence::HIGH);
+        $edge1 = new GraphEdge('App\\A', 'App\\B', EdgeType::EXTENDS_CLASS);
+        $edge2 = new GraphEdge('App\\A', 'App\\C', EdgeType::PARAM_TYPE);
         $this->graph->addEdge($edge1);
         $this->graph->addEdge($edge2);
 

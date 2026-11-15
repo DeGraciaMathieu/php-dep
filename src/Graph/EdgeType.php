@@ -27,8 +27,4 @@ enum EdgeType: string
     // Control flow
     case INSTANCEOF_CHECK = 'instanceof';
     case CATCHES          = 'catches';
-    case THROWS           = 'throws';
-
-    // Misc
-    case TYPE_HINT       = 'type_hint';
 }

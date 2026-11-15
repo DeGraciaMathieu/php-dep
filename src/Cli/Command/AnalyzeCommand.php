@@ -63,7 +63,6 @@ final class AnalyzeCommand extends Command
         $excludeVendor = !$input->getOption('include-vendor');
         $config        = new AnalyzerConfig(
             excludeVendor: $excludeVendor,
-            vendorMode:    $excludeVendor ? 'boundary' : 'full',
             excludeDirs:   $input->getOption('exclude'),
             workers:       (int) $workers,
         );

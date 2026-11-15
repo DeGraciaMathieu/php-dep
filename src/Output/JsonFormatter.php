@@ -28,7 +28,7 @@ final class JsonFormatter
 
         $result = [
             'meta' => [
-                'version'        => '1.0',
+                'version'        => '2.0',
                 'generated_at'   => date('c'),
                 'analyzed_path'  => $options['path'] ?? null,
                 'file_count'     => $options['file_count'] ?? 0,
