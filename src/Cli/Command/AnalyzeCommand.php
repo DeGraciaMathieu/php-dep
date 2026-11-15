@@ -80,10 +80,13 @@ final class AnalyzeCommand extends Command
 
         $warnings = $result['warnings'];
 
-        (new JsonFormatter())->format($result['graph'], $warnings, $output, [
+        $json = (new JsonFormatter())->format($result['graph'], $warnings, [
             'path'       => $resolvedPath,
             'file_count' => $result['file_count'],
         ]);
+
+        // Written whatever the verbosity, --quiet included
+        $output->write($json, false, OutputInterface::VERBOSITY_QUIET);
 
         $hasParseErrors = array_filter(
             $warnings,

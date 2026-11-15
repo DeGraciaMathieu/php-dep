@@ -13,23 +13,19 @@ use PhpDep\Output\JsonFormatter;
 use PhpDep\Warning\AnalysisWarning;
 use PhpDep\Warning\WarningType;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Output\BufferedOutput;
 
 final class JsonFormatterTest extends TestCase
 {
     private JsonFormatter $formatter;
-    private BufferedOutput $output;
 
     protected function setUp(): void
     {
         $this->formatter = new JsonFormatter();
-        $this->output    = new BufferedOutput();
     }
 
     private function formatAndDecode(DependencyGraph $graph, array $warnings = [], array $options = []): array
     {
-        $this->formatter->format($graph, $warnings, $this->output, $options);
-        $json = $this->output->fetch();
+        $json = $this->formatter->format($graph, $warnings, $options);
         self::assertJson($json);
         return json_decode($json, true);
     }
@@ -38,8 +34,7 @@ final class JsonFormatterTest extends TestCase
 
     public function testOutputIsValidJson(): void
     {
-        $this->formatter->format(new DependencyGraph(), [], $this->output);
-        self::assertJson($this->output->fetch());
+        self::assertJson($this->formatter->format(new DependencyGraph(), []));
     }
 
     public function testEmptyGraphHasExpectedTopLevelKeys(): void

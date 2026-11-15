@@ -8,16 +8,15 @@ use PhpDep\Graph\DependencyGraph;
 use PhpDep\Graph\GraphEdge;
 use PhpDep\Graph\GraphNode;
 use PhpDep\Warning\AnalysisWarning;
-use Symfony\Component\Console\Output\OutputInterface;
 
 final class JsonFormatter
 {
+    /** @param AnalysisWarning[] $warnings */
     public function format(
         DependencyGraph $graph,
         array           $warnings,
-        OutputInterface $output,
         array           $options = [],
-    ): void {
+    ): string {
         $internalNodes = $graph->getInternalNodes();
         $allEdges      = $graph->getAllEdges();
         $allNodes      = $graph->getAllNodes();
@@ -48,11 +47,6 @@ final class JsonFormatter
             'warnings' => array_map(fn(AnalysisWarning $w) => $w->toArray(), $warnings),
         ];
 
-        // Always write JSON regardless of verbosity/quiet mode — use STDOUT directly
-        $output->write(
-            json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
-            false,
-            OutputInterface::VERBOSITY_QUIET,
-        );
+        return json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     }
 }
