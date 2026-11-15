@@ -42,7 +42,6 @@ final class AnalysisWarningTest extends TestCase
     public function testWarningTypeValues(): void
     {
         self::assertSame('dynamic_instantiation', WarningType::DYNAMIC_INSTANTIATION->value);
-        self::assertSame('dynamic_call',          WarningType::DYNAMIC_CALL->value);
         self::assertSame('parse_error',           WarningType::PARSE_ERROR->value);
     }
 

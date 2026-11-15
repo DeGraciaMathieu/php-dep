@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PhpDep\Tests\Output;
 
-use PhpDep\Graph\Confidence;
 use PhpDep\Graph\DependencyGraph;
 use PhpDep\Graph\EdgeType;
 use PhpDep\Graph\GraphEdge;
@@ -56,7 +55,7 @@ final class JsonFormatterTest extends TestCase
     public function testMetaVersion(): void
     {
         $data = $this->formatAndDecode(new DependencyGraph());
-        self::assertSame('1.0', $data['meta']['version']);
+        self::assertSame('2.0', $data['meta']['version']);
     }
 
     public function testMetaCountsOnEmptyGraph(): void
@@ -111,7 +110,7 @@ final class JsonFormatterTest extends TestCase
         $graph = new DependencyGraph();
         $graph->addNode(new GraphNode('App\\A', NodeType::CLASS_NODE));
         $graph->addNode(new GraphNode('App\\B', NodeType::CLASS_NODE));
-        $graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::EXTENDS_CLASS, Confidence::CERTAIN));
+        $graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::EXTENDS_CLASS));
 
         $data  = $this->formatAndDecode($graph);
         $classA = $this->findClass($data['classes'], 'App\\A');
@@ -130,7 +129,7 @@ final class JsonFormatterTest extends TestCase
         $graph = new DependencyGraph();
         $graph->addNode(new GraphNode('App\\A', NodeType::CLASS_NODE));
         $graph->addNode(new GraphNode('App\\B', NodeType::CLASS_NODE));
-        $graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::EXTENDS_CLASS, Confidence::CERTAIN));
+        $graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::EXTENDS_CLASS));
 
         $data = $this->formatAndDecode($graph);
 
@@ -138,7 +137,6 @@ final class JsonFormatterTest extends TestCase
         self::assertSame('App\\A', $data['edges'][0]['source']);
         self::assertSame('App\\B', $data['edges'][0]['target']);
         self::assertSame('extends', $data['edges'][0]['type']);
-        self::assertSame('certain', $data['edges'][0]['confidence']);
     }
 
     // ── Warnings ──────────────────────────────────────────────────────────────

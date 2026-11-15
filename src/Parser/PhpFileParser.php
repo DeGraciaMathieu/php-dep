@@ -7,7 +7,6 @@ namespace PhpDep\Parser;
 use PhpDep\Graph\GraphEdge;
 use PhpDep\Graph\GraphNode;
 use PhpDep\Parser\Visitor\ClassDeclarationVisitor;
-use PhpDep\Parser\Visitor\DocblockVisitor;
 use PhpDep\Parser\Visitor\RelationshipVisitor;
 use PhpDep\Warning\AnalysisWarning;
 use PhpDep\Warning\WarningType;
@@ -31,7 +30,7 @@ final class PhpFileParser
      *
      * @return array{nodes: GraphNode[], edges: GraphEdge[], warnings: AnalysisWarning[]}
      */
-    public function parse(string $file, bool $docblocks = false): array
+    public function parse(string $file): array
     {
         $code = @file_get_contents($file);
         if ($code === false) {
@@ -73,28 +72,17 @@ final class PhpFileParser
         $scope               = new ClassScope();
         $classVisitor        = new ClassDeclarationVisitor($file);
         $relationshipVisitor = new RelationshipVisitor($file, $this->typeResolver, $scope);
-        $docblockVisitor     = $docblocks ? new DocblockVisitor($file, $scope) : null;
 
         $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
         $traverser->addVisitor($scope);
         $traverser->addVisitor($classVisitor);
         $traverser->addVisitor($relationshipVisitor);
-
-        if ($docblockVisitor !== null) {
-            $traverser->addVisitor($docblockVisitor);
-        }
-
         $traverser->traverse($stmts);
-
-        $edges = array_merge(
-            $relationshipVisitor->getEdges(),
-            $docblockVisitor?->getEdges() ?? [],
-        );
 
         return [
             'nodes'    => $classVisitor->getNodes(),
-            'edges'    => $edges,
+            'edges'    => $relationshipVisitor->getEdges(),
             'warnings' => $relationshipVisitor->getWarnings(),
         ];
     }

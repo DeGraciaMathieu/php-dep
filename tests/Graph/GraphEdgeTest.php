@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PhpDep\Tests\Graph;
 
-use PhpDep\Graph\Confidence;
 use PhpDep\Graph\EdgeType;
 use PhpDep\Graph\GraphEdge;
 use PHPUnit\Framework\TestCase;
@@ -17,38 +16,26 @@ final class GraphEdgeTest extends TestCase
             'App\\Foo',
             'App\\Bar',
             EdgeType::EXTENDS_CLASS,
-            Confidence::CERTAIN,
             '/path/Foo.php',
             10,
-            ['key' => 'value'],
         );
 
         self::assertSame([
-            'source'     => 'App\\Foo',
-            'target'     => 'App\\Bar',
-            'type'       => 'extends',
-            'confidence' => 'certain',
-            'file'       => '/path/Foo.php',
-            'line'       => 10,
-            'metadata'   => ['key' => 'value'],
+            'source' => 'App\\Foo',
+            'target' => 'App\\Bar',
+            'type'   => 'extends',
+            'file'   => '/path/Foo.php',
+            'line'   => 10,
         ], $edge->toArray());
     }
 
     public function testToArrayDefaultsForOptionalFields(): void
     {
-        $edge = new GraphEdge('App\\A', 'App\\B', EdgeType::INSTANTIATES, Confidence::HIGH);
+        $edge = new GraphEdge('App\\A', 'App\\B', EdgeType::INSTANTIATES);
         $array = $edge->toArray();
 
         self::assertNull($array['file']);
         self::assertNull($array['line']);
-        self::assertSame([], $array['metadata']);
-    }
-
-    public function testConfidenceValuesInToArray(): void
-    {
-        self::assertSame('high',   (new GraphEdge('A', 'B', EdgeType::PARAM_TYPE, Confidence::HIGH))->toArray()['confidence']);
-        self::assertSame('medium', (new GraphEdge('A', 'B', EdgeType::INSTANCEOF_CHECK, Confidence::MEDIUM))->toArray()['confidence']);
-        self::assertSame('low',    (new GraphEdge('A', 'B', EdgeType::INSTANTIATES, Confidence::LOW))->toArray()['confidence']);
     }
 
     public function testEdgeTypeValuesInToArray(): void
@@ -67,7 +54,7 @@ final class GraphEdgeTest extends TestCase
         ];
 
         foreach ($cases as [$type, $expected]) {
-            $array = (new GraphEdge('A', 'B', $type, Confidence::HIGH))->toArray();
+            $array = (new GraphEdge('A', 'B', $type))->toArray();
             self::assertSame($expected, $array['type'], "Expected type value '{$expected}'");
         }
     }

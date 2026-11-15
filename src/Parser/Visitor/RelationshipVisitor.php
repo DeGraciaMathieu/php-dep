@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PhpDep\Parser\Visitor;
 
-use PhpDep\Graph\Confidence;
 use PhpDep\Graph\EdgeType;
 use PhpDep\Graph\GraphEdge;
 use PhpDep\Parser\ClassScope;
@@ -68,7 +67,7 @@ final class RelationshipVisitor extends NodeVisitorAbstract
         // Trait use statements
         if ($node instanceof TraitUse) {
             foreach ($node->traits as $traitName) {
-                $this->addEdge($source, (string) $traitName, EdgeType::USES_TRAIT, Confidence::CERTAIN, $node->getStartLine());
+                $this->addEdge($source, (string) $traitName, EdgeType::USES_TRAIT, $node->getStartLine());
             }
         }
 
@@ -80,26 +79,26 @@ final class RelationshipVisitor extends NodeVisitorAbstract
         // Property type hints
         if ($node instanceof Property) {
             foreach ($this->typeResolver->resolve($node->type) as $fqcn) {
-                $this->addEdge($source, $fqcn, EdgeType::PROPERTY_TYPE, Confidence::CERTAIN, $node->getStartLine());
+                $this->addEdge($source, $fqcn, EdgeType::PROPERTY_TYPE, $node->getStartLine());
             }
         }
 
         // Typed class constants (PHP 8.3)
         if ($node instanceof ClassConst) {
             foreach ($this->typeResolver->resolve($node->type) as $fqcn) {
-                $this->addEdge($source, $fqcn, EdgeType::CONSTANT_TYPE, Confidence::CERTAIN, $node->getStartLine());
+                $this->addEdge($source, $fqcn, EdgeType::CONSTANT_TYPE, $node->getStartLine());
             }
         }
 
         // #[Foo]
         if ($node instanceof Attribute) {
-            $this->addEdge($source, (string) $node->name, EdgeType::ATTRIBUTE, Confidence::CERTAIN, $node->getStartLine());
+            $this->addEdge($source, (string) $node->name, EdgeType::ATTRIBUTE, $node->getStartLine());
         }
 
         // new Foo()
         if ($node instanceof New_) {
             if ($node->class instanceof Name) {
-                $this->addEdge($source, (string) $node->class, EdgeType::INSTANTIATES, Confidence::CERTAIN, $node->getStartLine());
+                $this->addEdge($source, (string) $node->class, EdgeType::INSTANTIATES, $node->getStartLine());
             } elseif (!$node->class instanceof Class_) {
                 $this->warnings[] = new AnalysisWarning(
                     WarningType::DYNAMIC_INSTANTIATION,
@@ -112,29 +111,29 @@ final class RelationshipVisitor extends NodeVisitorAbstract
 
         // Foo::method() / Foo::$prop / Foo::CONST
         if ($node instanceof StaticCall && $node->class instanceof Name) {
-            $this->addEdge($source, (string) $node->class, EdgeType::STATIC_CALL, Confidence::CERTAIN, $node->getStartLine());
+            $this->addEdge($source, (string) $node->class, EdgeType::STATIC_CALL, $node->getStartLine());
         }
 
         if ($node instanceof StaticPropertyFetch && $node->class instanceof Name) {
-            $this->addEdge($source, (string) $node->class, EdgeType::STATIC_PROPERTY, Confidence::CERTAIN, $node->getStartLine());
+            $this->addEdge($source, (string) $node->class, EdgeType::STATIC_PROPERTY, $node->getStartLine());
         }
 
         if ($node instanceof ClassConstFetch && $node->class instanceof Name) {
             $className = (string) $node->class;
             if (!in_array(strtolower($className), ['self', 'static', 'parent'], true)) {
-                $this->addEdge($source, $className, EdgeType::CONST_ACCESS, Confidence::CERTAIN, $node->getStartLine());
+                $this->addEdge($source, $className, EdgeType::CONST_ACCESS, $node->getStartLine());
             }
         }
 
         // instanceof Foo
         if ($node instanceof Instanceof_ && $node->class instanceof Name) {
-            $this->addEdge($source, (string) $node->class, EdgeType::INSTANCEOF_CHECK, Confidence::MEDIUM, $node->getStartLine());
+            $this->addEdge($source, (string) $node->class, EdgeType::INSTANCEOF_CHECK, $node->getStartLine());
         }
 
         // catch (FooException $e)
         if ($node instanceof Catch_) {
             foreach ($node->types as $exceptionType) {
-                $this->addEdge($source, (string) $exceptionType, EdgeType::CATCHES, Confidence::CERTAIN, $node->getStartLine());
+                $this->addEdge($source, (string) $exceptionType, EdgeType::CATCHES, $node->getStartLine());
             }
         }
 
@@ -144,25 +143,25 @@ final class RelationshipVisitor extends NodeVisitorAbstract
     private function extractClassRelations(string $source, Class_ $node): void
     {
         if ($node->extends !== null) {
-            $this->addEdge($source, (string) $node->extends, EdgeType::EXTENDS_CLASS, Confidence::CERTAIN, $node->getStartLine());
+            $this->addEdge($source, (string) $node->extends, EdgeType::EXTENDS_CLASS, $node->getStartLine());
         }
 
         foreach ($node->implements as $iface) {
-            $this->addEdge($source, (string) $iface, EdgeType::IMPLEMENTS_INTERFACE, Confidence::CERTAIN, $node->getStartLine());
+            $this->addEdge($source, (string) $iface, EdgeType::IMPLEMENTS_INTERFACE, $node->getStartLine());
         }
     }
 
     private function extractInterfaceRelations(string $source, Interface_ $node): void
     {
         foreach ($node->extends as $parent) {
-            $this->addEdge($source, (string) $parent, EdgeType::EXTENDS_CLASS, Confidence::CERTAIN, $node->getStartLine());
+            $this->addEdge($source, (string) $parent, EdgeType::EXTENDS_CLASS, $node->getStartLine());
         }
     }
 
     private function extractEnumRelations(string $source, Enum_ $node): void
     {
         foreach ($node->implements as $iface) {
-            $this->addEdge($source, (string) $iface, EdgeType::IMPLEMENTS_INTERFACE, Confidence::CERTAIN, $node->getStartLine());
+            $this->addEdge($source, (string) $iface, EdgeType::IMPLEMENTS_INTERFACE, $node->getStartLine());
         }
     }
 
@@ -170,16 +169,16 @@ final class RelationshipVisitor extends NodeVisitorAbstract
     {
         foreach ($node->getParams() as $param) {
             foreach ($this->typeResolver->resolve($param->type) as $fqcn) {
-                $this->addEdge($source, $fqcn, EdgeType::PARAM_TYPE, Confidence::CERTAIN, $param->getStartLine());
+                $this->addEdge($source, $fqcn, EdgeType::PARAM_TYPE, $param->getStartLine());
             }
         }
 
         foreach ($this->typeResolver->resolve($node->getReturnType()) as $fqcn) {
-            $this->addEdge($source, $fqcn, EdgeType::RETURN_TYPE, Confidence::CERTAIN, $node->getStartLine());
+            $this->addEdge($source, $fqcn, EdgeType::RETURN_TYPE, $node->getStartLine());
         }
     }
 
-    private function addEdge(string $source, string $target, EdgeType $type, Confidence $confidence, int $line): void
+    private function addEdge(string $source, string $target, EdgeType $type, int $line): void
     {
         // Skip self-referential edges
         if ($source === $target) {
@@ -198,12 +197,11 @@ final class RelationshipVisitor extends NodeVisitorAbstract
         }
 
         $this->edges[] = new GraphEdge(
-            source:     $source,
-            target:     $target,
-            type:       $type,
-            confidence: $confidence,
-            file:       $this->file,
-            line:       $line > 0 ? $line : null,
+            source: $source,
+            target: $target,
+            type:   $type,
+            file:   $this->file,
+            line:   $line > 0 ? $line : null,
         );
     }
 

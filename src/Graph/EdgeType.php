@@ -27,14 +27,4 @@ enum EdgeType: string
     // Control flow
     case INSTANCEOF_CHECK = 'instanceof';
     case CATCHES          = 'catches';
-    case THROWS           = 'throws';
-
-    // Docblock (Tier 2)
-    case DOCBLOCK_PARAM  = 'docblock_param';
-    case DOCBLOCK_RETURN = 'docblock_return';
-    case DOCBLOCK_VAR    = 'docblock_var';
-    case DOCBLOCK_THROWS = 'docblock_throws';
-
-    // Misc
-    case TYPE_HINT       = 'type_hint';
 }

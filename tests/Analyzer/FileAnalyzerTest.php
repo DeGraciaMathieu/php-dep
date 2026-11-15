@@ -55,27 +55,6 @@ final class FileAnalyzerTest extends TestCase
         self::assertSame(WarningType::PARSE_ERROR, $result['warnings'][0]->type);
     }
 
-    public function testAnalyzeRespectsSkipDocblocksFlag(): void
-    {
-        $this->write(<<<'PHP'
-            <?php
-            namespace App;
-            class Bar {}
-            class Foo {
-                /** @param Bar $b */
-                public function run($b): void {}
-            }
-            PHP);
-
-        $withDocblocks    = $this->analyzer->analyze($this->tmpFile, new AnalyzerConfig(docblocks: true));
-        $withoutDocblocks = $this->analyzer->analyze($this->tmpFile, new AnalyzerConfig(docblocks: false));
-
-        $isDocblockEdge = fn($e) => str_starts_with($e->type->value, 'docblock_');
-
-        self::assertNotEmpty(array_filter($withDocblocks['edges'], $isDocblockEdge));
-        self::assertEmpty(array_filter($withoutDocblocks['edges'], $isDocblockEdge));
-    }
-
     public function testAnalyzeExtractsEdges(): void
     {
         $this->write(<<<'PHP'
