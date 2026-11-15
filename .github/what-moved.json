@@ -1,0 +1,11 @@
+{
+    "contexts": {
+        "Cli":       { "position": [390, 80] },
+        "Analyzer":  { "position": [390, 220] },
+        "Output":    { "position": [630, 220] },
+        "Discovery": { "position": [150, 330] },
+        "Parser":    { "position": [390, 370] },
+        "Graph":     { "position": [390, 530] },
+        "Warning":   { "position": [630, 470] }
+    }
+}
