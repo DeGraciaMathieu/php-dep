@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace PhpDep\Discovery;
 
-use PhpDep\Analyzer\AnalyzerConfig;
-
 final class FileDiscovery
 {
     /** Directories always excluded from discovery */
@@ -28,23 +26,24 @@ final class FileDiscovery
      * Uses git ls-files if the path is inside a git repo, falls back to
      * RecursiveDirectoryIterator otherwise.
      *
+     * @param string[] $excludeDirs directories to exclude, in addition to the defaults
      * @return string[] absolute file paths
      */
-    public function discover(string $path, AnalyzerConfig $config): array
+    public function discover(string $path, array $excludeDirs = [], bool $excludeVendor = true): array
     {
         $path = realpath($path) ?: $path;
 
         $files = $this->tryGitDiscovery($path)
-              ?? $this->filesystemDiscovery($path, $config);
+              ?? $this->filesystemDiscovery($path, $excludeDirs);
 
         // Apply exclude filters
-        $excludeDirs = array_merge(
-            $config->excludeVendor ? ['vendor'] : [],
-            $config->excludeDirs,
+        $excludedFromPaths = array_merge(
+            $excludeVendor ? ['vendor'] : [],
+            $excludeDirs,
         );
 
-        $files = array_filter($files, function (string $file) use ($excludeDirs): bool {
-            foreach ($excludeDirs as $dir) {
+        $files = array_filter($files, function (string $file) use ($excludedFromPaths): bool {
+            foreach ($excludedFromPaths as $dir) {
                 if (str_contains($file, DIRECTORY_SEPARATOR . $dir . DIRECTORY_SEPARATOR)
                     || str_ends_with($file, DIRECTORY_SEPARATOR . $dir)) {
                     return false;
@@ -112,7 +111,7 @@ final class FileDiscovery
      *
      * @return string[]
      */
-    private function filesystemDiscovery(string $path, AnalyzerConfig $config): array
+    private function filesystemDiscovery(string $path, array $excludeDirs): array
     {
         if (!is_dir($path)) {
             if (is_file($path) && str_ends_with($path, '.php')) {
@@ -121,7 +120,7 @@ final class FileDiscovery
             return [];
         }
 
-        $excludeDirs = array_merge(self::DEFAULT_EXCLUDE_DIRS, $config->excludeDirs);
+        $excludeDirs = array_merge(self::DEFAULT_EXCLUDE_DIRS, $excludeDirs);
         $files       = [];
 
         $iterator = new \RecursiveIteratorIterator(

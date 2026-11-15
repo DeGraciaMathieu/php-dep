@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PhpDep\Tests\Discovery;
 
-use PhpDep\Analyzer\AnalyzerConfig;
 use PhpDep\Discovery\FileDiscovery;
 use PHPUnit\Framework\TestCase;
 
@@ -47,7 +46,7 @@ final class FileDiscoveryTest extends TestCase
         $file = $this->tmpDir . '/Foo.php';
         file_put_contents($file, '<?php class Foo {}');
 
-        $result = $this->discovery->discover($file, new AnalyzerConfig());
+        $result = $this->discovery->discover($file);
 
         self::assertCount(1, $result);
         self::assertSame(realpath($file), $result[0]);
@@ -58,14 +57,14 @@ final class FileDiscoveryTest extends TestCase
         $file = $this->tmpDir . '/readme.txt';
         file_put_contents($file, 'hello');
 
-        $result = $this->discovery->discover($file, new AnalyzerConfig());
+        $result = $this->discovery->discover($file);
 
         self::assertSame([], $result);
     }
 
     public function testNonExistentPathReturnsEmpty(): void
     {
-        $result = $this->discovery->discover('/does/not/exist/at/all', new AnalyzerConfig());
+        $result = $this->discovery->discover('/does/not/exist/at/all');
 
         self::assertSame([], $result);
     }
@@ -77,7 +76,7 @@ final class FileDiscoveryTest extends TestCase
         file_put_contents($this->tmpDir . '/A.php', '<?php class A {}');
         file_put_contents($this->tmpDir . '/B.php', '<?php class B {}');
 
-        $result = $this->discovery->discover($this->tmpDir, new AnalyzerConfig());
+        $result = $this->discovery->discover($this->tmpDir);
 
         self::assertCount(2, $result);
     }
@@ -88,7 +87,7 @@ final class FileDiscoveryTest extends TestCase
         file_put_contents($this->tmpDir . '/style.css', 'body {}');
         file_put_contents($this->tmpDir . '/readme.md', '# Readme');
 
-        $result = $this->discovery->discover($this->tmpDir, new AnalyzerConfig());
+        $result = $this->discovery->discover($this->tmpDir);
 
         self::assertCount(1, $result);
         self::assertStringEndsWith('A.php', $result[0]);
@@ -100,14 +99,14 @@ final class FileDiscoveryTest extends TestCase
         file_put_contents($this->tmpDir . '/A.php', '<?php class A {}');
         file_put_contents($this->tmpDir . '/sub/B.php', '<?php class B {}');
 
-        $result = $this->discovery->discover($this->tmpDir, new AnalyzerConfig());
+        $result = $this->discovery->discover($this->tmpDir);
 
         self::assertCount(2, $result);
     }
 
     public function testEmptyDirectoryReturnsEmpty(): void
     {
-        $result = $this->discovery->discover($this->tmpDir, new AnalyzerConfig());
+        $result = $this->discovery->discover($this->tmpDir);
 
         self::assertSame([], $result);
     }
@@ -120,7 +119,7 @@ final class FileDiscoveryTest extends TestCase
         mkdir($this->tmpDir . '/vendor');
         file_put_contents($this->tmpDir . '/vendor/Lib.php', '<?php class Lib {}');
 
-        $result = $this->discovery->discover($this->tmpDir, new AnalyzerConfig());
+        $result = $this->discovery->discover($this->tmpDir);
 
         self::assertCount(1, $result);
         self::assertStringContainsString('A.php', $result[0]);
@@ -132,8 +131,7 @@ final class FileDiscoveryTest extends TestCase
         mkdir($this->tmpDir . '/generated');
         file_put_contents($this->tmpDir . '/generated/B.php', '<?php class B {}');
 
-        $config = new AnalyzerConfig(excludeDirs: ['generated']);
-        $result = $this->discovery->discover($this->tmpDir, $config);
+        $result = $this->discovery->discover($this->tmpDir, ['generated']);
 
         self::assertCount(1, $result);
         self::assertStringContainsString('A.php', $result[0]);
@@ -145,7 +143,7 @@ final class FileDiscoveryTest extends TestCase
         file_put_contents($this->tmpDir . '/A.php', '<?php class A {}');
         file_put_contents($this->tmpDir . '/M.php', '<?php class M {}');
 
-        $result = $this->discovery->discover($this->tmpDir, new AnalyzerConfig());
+        $result = $this->discovery->discover($this->tmpDir);
 
         $sorted = $result;
         sort($sorted);
