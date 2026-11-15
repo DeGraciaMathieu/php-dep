@@ -8,6 +8,7 @@ use PhpDep\Analyzer\AnalyzerConfig;
 use PhpDep\Analyzer\ProjectAnalyzer;
 use PhpDep\Graph\DependencyGraph;
 use PhpDep\Graph\GraphNode;
+use PhpDep\Parser\PhpFileParser;
 use PhpDep\Warning\AnalysisWarning;
 
 /**
@@ -25,7 +26,7 @@ final class Analysis
 
     public static function of(string $path, int $workers = 1): self
     {
-        $result = (new ProjectAnalyzer())->analyze($path, new AnalyzerConfig(workers: $workers));
+        $result = (new ProjectAnalyzer(new PhpFileParser()))->analyze($path, new AnalyzerConfig(workers: $workers));
 
         return new self($result['graph'], $result['warnings']);
     }
