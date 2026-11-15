@@ -10,7 +10,7 @@ use Symfony\Component\Console\Application as ConsoleApplication;
 final class Application extends ConsoleApplication
 {
     private const NAME = 'php-dep';
-    private const VERSION = '1.0.0';
+    private const VERSION = '2.0.0';
 
     public function __construct()
     {
