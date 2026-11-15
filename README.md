@@ -48,8 +48,9 @@ php-dep analyze [<path>] [options]
 | Code | Meaning |
 |---|---|
 | `0` | Success |
-| `1` | Parsing error(s) or analysis failure |
+| `1` | Analysis failure, nothing written |
 | `2` | Invalid arguments |
+| `3` | Graph written, but some files could not be parsed: see the `parse_error` warnings |
 
 ---
 

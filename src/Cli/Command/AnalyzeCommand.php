@@ -8,6 +8,7 @@ use PhpDep\Analyzer\AnalyzerConfig;
 use PhpDep\Analyzer\ProjectAnalyzer;
 use PhpDep\Analyzer\WorkerPool;
 use PhpDep\Output\JsonFormatter;
+use PhpDep\Warning\WarningType;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -22,6 +23,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 )]
 final class AnalyzeCommand extends Command
 {
+    /** The graph is written, but some files could not be parsed: see the parse_error warnings */
+    public const PARTIAL = 3;
+
     protected function configure(): void
     {
         $this
@@ -81,12 +85,11 @@ final class AnalyzeCommand extends Command
             'file_count' => $result['file_count'],
         ]);
 
-        // Return FAILURE if there were parse errors
         $hasParseErrors = array_filter(
             $warnings,
-            fn($w) => $w->type->value === 'parse_error',
+            fn($w) => $w->type === WarningType::PARSE_ERROR,
         );
 
-        return !empty($hasParseErrors) ? Command::FAILURE : Command::SUCCESS;
+        return $hasParseErrors !== [] ? self::PARTIAL : Command::SUCCESS;
     }
 }
