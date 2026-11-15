@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PhpDep\Analyzer;
 
+use Composer\Autoload\ClassLoader;
+
 final class WorkerPool
 {
     public function __construct(
@@ -35,6 +37,8 @@ final class WorkerPool
         if ($workers <= 1 || !function_exists('pcntl_fork')) {
             return array_map($task, $items);
         }
+
+        $this->loadEveryClass();
 
         // Round-robin, so that big files sorted together end up on different workers
         $chunks = [];
@@ -82,5 +86,24 @@ final class WorkerPool
         ksort($results);
 
         return $results;
+    }
+
+    /**
+     * Inside a PHAR, forked processes share the file handle of the archive: two of them loading a class
+     * at the same time read each other's bytes. Every class is loaded before forking, so that none is loaded after.
+     */
+    private function loadEveryClass(): void
+    {
+        if (\Phar::running() === '') {
+            return;
+        }
+
+        foreach (ClassLoader::getRegisteredLoaders() as $loader) {
+            foreach (array_keys($loader->getClassMap()) as $class) {
+                if (str_starts_with($class, 'PhpParser\\') || str_starts_with($class, 'PhpDep\\')) {
+                    class_exists($class);
+                }
+            }
+        }
     }
 }
