@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 501" width="780" height="501" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<style>text{fill:#1e1b16}.sub{fill:#6b6357;font-size:11px}.hot{fill:#b5121b;font-size:11px;font-weight:600}.new{fill:#2f7d4f;font-size:11px;font-weight:600}.legend{fill:#6b6357;font-size:12px}.count{fill:#6b6357;font-size:14px;font-weight:600}</style>
+<defs>
+<marker id="arrow-edge" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#a8998a"/></marker>
+<marker id="arrow-added" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2f7d4f"/></marker>
+</defs>
+<rect width="780" height="501" fill="#ffffff"/>
+<text x="20" y="28" font-size="14" font-weight="600">4 classes touched out of 22 · 3 dependencies added</text>
+<g transform="translate(-118 -138)">
+<path d="M385.7 246.7 Q378.0 295.0 384.1 333.3" fill="none" stroke="#a8998a" stroke-width="2.6" stroke-linecap="round" opacity="0.8" marker-end="url(#arrow-edge)"><title>Analyzer → Parser: 1 dependencies, 0 added</title></path>
+<path d="M415.6 385.8 Q502.0 439.2 606.8 464.4" fill="none" stroke="#a8998a" stroke-width="4.2" stroke-linecap="round" opacity="0.8" marker-end="url(#arrow-edge)"><title>Parser → Warning: 4 dependencies, 0 added</title></path>
+<path d="M385.2 399.8 Q377.2 450.0 385.1 499.2" fill="none" stroke="#a8998a" stroke-width="5.5" stroke-linecap="round" opacity="0.8" marker-end="url(#arrow-edge)"><title>Parser → Graph: 8 dependencies, 0 added</title></path>
+<circle cx="390" cy="220" r="24.0" fill="#efe9dd" stroke="#1e1b16" stroke-width="1.2"/>
+<text x="390" y="225.0" text-anchor="middle" class="count">4</text>
+<rect x="310.8" y="255.5" width="158.4" height="17" rx="3" fill="#ffffff" opacity="0.92"/>
+<text x="390" y="268.0" text-anchor="middle" font-size="12.5" font-weight="600">Analyzer<tspan dx="6" class="sub">cohesion 57 %</tspan></text>
+<circle cx="390" cy="530" r="27.1" fill="#efe9dd" stroke="#1e1b16" stroke-width="1.2"/>
+<text x="390" y="535.0" text-anchor="middle" class="count">6</text>
+<rect x="318.7" y="568.6" width="142.6" height="17" rx="3" fill="#ffffff" opacity="0.92"/>
+<text x="390" y="581.1" text-anchor="middle" font-size="12.5" font-weight="600">Graph<tspan dx="6" class="sub">cohesion 100 %</tspan></text>
+<circle cx="390" cy="370" r="33.1" fill="none" stroke="#e6dfd2" stroke-width="5"/>
+<circle cx="390" cy="370" r="33.1" fill="none" stroke="#b5121b" stroke-width="5" stroke-dasharray="104.1 208.3" transform="rotate(-90 390 370)"/>
+<circle cx="390" cy="370" r="33.1" fill="none" stroke="#2f7d4f" stroke-width="5" stroke-dasharray="34.7 208.3" stroke-dashoffset="-104.1" transform="rotate(-90 390 370)"/>
+<rect x="309.4" y="304.4" width="161.2" height="17" rx="3" fill="#fbe8e8" opacity="0.92"/>
+<text x="390" y="316.9" text-anchor="middle" class="hot">3 changed · 1 added of 6</text>
+<circle cx="390" cy="370" r="27.1" fill="#efe9dd" stroke="#1e1b16" stroke-width="1.2"/>
+<text x="390" y="375.0" text-anchor="middle" class="count">6</text>
+<rect x="318.2" y="408.6" width="143.6" height="17" rx="3" fill="#ffffff" opacity="0.92"/>
+<text x="390" y="421.1" text-anchor="middle" font-size="12.5" font-weight="600">Parser<tspan dx="6" class="sub">cohesion 40 %</tspan></text>
+<circle cx="630" cy="470" r="19.9" fill="#efe9dd" stroke="#1e1b16" stroke-width="1.2"/>
+<text x="630" y="475.0" text-anchor="middle" class="count">2</text>
+<rect x="551.3" y="501.4" width="157.4" height="17" rx="3" fill="#ffffff" opacity="0.92"/>
+<text x="630" y="513.9" text-anchor="middle" font-size="12.5" font-weight="600">Warning<tspan dx="6" class="sub">cohesion 100 %</tspan></text>
+<path d="M385.7 246.7 Q378.0 295.0 384.1 333.3" fill="none" stroke="none" marker-end="url(#arrow-edge)"/>
+<path d="M415.6 385.8 Q502.0 439.2 606.8 464.4" fill="none" stroke="none" marker-end="url(#arrow-edge)"/>
+<path d="M385.2 399.8 Q377.2 450.0 385.1 499.2" fill="none" stroke="none" marker-end="url(#arrow-edge)"/>
+</g>
+<circle cx="25" cy="479" r="5" fill="none" stroke="#b5121b" stroke-width="3"/>
+<text x="36" y="483" class="legend">classes changed</text>
+<circle cx="153" cy="479" r="5" fill="none" stroke="#2f7d4f" stroke-width="3"/>
+<text x="164" y="483" class="legend">classes added</text>
+<line x1="263" y1="479" x2="281" y2="479" stroke="#2f7d4f" stroke-width="3"/>
+<text x="287" y="483" class="legend">dependency added</text>
+<line x1="405" y1="479" x2="423" y2="479" stroke="#a8998a" stroke-width="3"/>
+<text x="429" y="483" class="legend">existing dependency touched</text>
+</svg>
