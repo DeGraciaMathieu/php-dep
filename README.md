@@ -82,7 +82,7 @@ php-dep [analyze] [<path>] [options]
 
 ### Analysis without vendor
 
-By default, `vendor/` is excluded from the analysis but third-party classes appear as `external` nodes in the graph. No additional option is needed to ignore them entirely.
+By default, the files of `vendor/` are not analyzed, but the third-party classes your code uses still appear in the graph, as `external` nodes without dependencies of their own. To keep only your classes, filter out the `external` nodes, for instance with `jq '[.edges[] | select(.target | startswith("App\\"))]'`.
 
 To analyze the vendor itself:
 
@@ -154,9 +154,11 @@ To analyze the vendor itself:
 | `instantiates` | `new Foo()` |
 | `static_call` | `Foo::method()` |
 | `static_property` | `Foo::$prop` |
-| `const_access` | `Foo::CONST` |
+| `const_access` | `Foo::CONST`, and `Foo::class` |
 | `instanceof` | `$x instanceof Foo` |
 | `catches` | `catch (FooException $e)` |
+
+An anonymous class is not a node of its own: what it extends, implements and uses is attributed to the class that declares it, and `new class {}` raises no `dynamic_instantiation` warning.
 
 ---
 
@@ -173,9 +175,8 @@ The JSON output includes them in `warnings[]`.
 
 ## How it works
 
-- **Discovery**: `git ls-files` if inside a git repository, so that ignored files are left out, otherwise `RecursiveDirectoryIterator`. The `vendor/`, `node_modules/`, `storage/`, `bootstrap/cache/`, `public/build/` and `.git/` directories are excluded by default, the same way in both cases.
-- **Dependencies**: [nikic/PHP-Parser](https://github.com/nikic/PHP-Parser) only. The command line is read without any console library.
-- **Parsing**: [nikic/PHP-Parser](https://github.com/nikic/PHP-Parser) v5. The `NameResolver` runs first in the traverser: all downstream names are resolved FQCNs.
+- **Discovery**: `git ls-files` if inside a git repository, so that ignored files are left out, otherwise `RecursiveDirectoryIterator`. The `vendor/`, `node_modules/`, `storage/`, `bootstrap/cache/`, `public/build/`, `.git/`, `.svn/`, `.hg/`, `.idea/` and `.vscode/` directories are excluded by default, the same way in both cases.
+- **Parsing**: [nikic/PHP-Parser](https://github.com/nikic/PHP-Parser) v5, the only dependency: the command line is read without any console library. The `NameResolver` runs first in the traverser: all downstream names are resolved FQCNs.
 - **Parallelism**: with the `pcntl` extension, the files are spread over forked processes; without it, they are parsed one after the other. The output is the same whatever the number of workers.
 - **Memory**: each file's AST is freed immediately after extraction. Each process holds one AST at a time.
 - **Vendor**: vendor classes are `external` nodes (leaves) — their files are not analyzed, unless `--include-vendor` is given.
@@ -184,3 +185,4 @@ The JSON output includes them in `warnings[]`.
 
 - PHP >= 8.2
 - Composer
+- The `pcntl` extension, optional: without it, the files are parsed one after the other
