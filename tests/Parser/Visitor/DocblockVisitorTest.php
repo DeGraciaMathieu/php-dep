@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpDep\Tests\Parser\Visitor;
 
 use PhpDep\Graph\EdgeType;
+use PhpDep\Parser\ClassScope;
 use PhpDep\Parser\Visitor\DocblockVisitor;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
@@ -18,9 +19,11 @@ final class DocblockVisitorTest extends TestCase
         $parser    = (new ParserFactory())->createForNewestSupportedVersion();
         $stmts     = $parser->parse($code);
         $traverser = new NodeTraverser();
-        $visitor   = new DocblockVisitor($file);
+        $scope     = new ClassScope();
+        $visitor   = new DocblockVisitor($file, $scope);
 
         $traverser->addVisitor(new NameResolver());
+        $traverser->addVisitor($scope);
         $traverser->addVisitor($visitor);
         $traverser->traverse($stmts);
 

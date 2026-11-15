@@ -70,12 +70,14 @@ final class PhpFileParser
             return ['nodes' => [], 'edges' => [], 'warnings' => []];
         }
 
+        $scope               = new ClassScope();
         $classVisitor        = new ClassDeclarationVisitor($file);
-        $relationshipVisitor = new RelationshipVisitor($file, $this->typeResolver);
-        $docblockVisitor     = $docblocks ? new DocblockVisitor($file) : null;
+        $relationshipVisitor = new RelationshipVisitor($file, $this->typeResolver, $scope);
+        $docblockVisitor     = $docblocks ? new DocblockVisitor($file, $scope) : null;
 
         $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
+        $traverser->addVisitor($scope);
         $traverser->addVisitor($classVisitor);
         $traverser->addVisitor($relationshipVisitor);
 
