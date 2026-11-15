@@ -95,4 +95,78 @@ final class ApplicationTest extends TestCase
         self::assertSame(0, $this->analyze('-V'));
         self::assertMatchesRegularExpression('/^php-dep \d+\.\d+\.\d+$/', trim($this->last['stdout']));
     }
+
+    public function testWritesTheGraphInItsDocumentedShape(): void
+    {
+        file_put_contents($this->tmpDir . '/Cart.php', "<?php namespace App;\nuse Acme\\Money;\nabstract class Cart extends Basket\n{\n    public function total(): Money {}\n}");
+        file_put_contents($this->tmpDir . '/Basket.php', '<?php namespace App; class Basket {}');
+        file_put_contents($this->tmpDir . '/Factory.php', '<?php namespace App; class Factory { public function make($c) { return new $c(); } }');
+
+        $this->analyze($this->tmpDir, '-w1');
+        $json = json_decode($this->last['stdout'], true);
+
+        self::assertSame('2.0', $json['meta']['version']);
+        self::assertSame(realpath($this->tmpDir), $json['meta']['analyzed_path']);
+        self::assertSame(
+            ['file_count' => 3, 'class_count' => 3, 'node_count' => 4, 'edge_count' => 2, 'warning_count' => 1],
+            array_intersect_key($json['meta'], array_flip(['file_count', 'class_count', 'node_count', 'edge_count', 'warning_count'])),
+        );
+        self::assertSame(['App\Basket', 'App\Cart', 'App\Factory'], array_column($json['classes'], 'fqcn'));
+        self::assertSame([
+            'fqcn'         => 'App\Cart',
+            'type'         => 'class',
+            'file'         => realpath($this->tmpDir) . '/Cart.php',
+            'line'         => 3,
+            'abstract'     => true,
+            'dependencies' => ['App\Basket', 'Acme\Money'],
+            'dependants'   => [],
+        ], $json['classes'][1]);
+        self::assertSame(['App\Cart'], $json['classes'][0]['dependants']);
+        self::assertSame([
+            ['source' => 'App\Cart', 'target' => 'Acme\Money', 'type' => 'return_type', 'file' => realpath($this->tmpDir) . '/Cart.php', 'line' => 5],
+            ['source' => 'App\Cart', 'target' => 'App\Basket', 'type' => 'extends', 'file' => realpath($this->tmpDir) . '/Cart.php', 'line' => 3],
+        ], $json['edges']);
+        self::assertSame('dynamic_instantiation', $json['warnings'][0]['type']);
+    }
+
+    public function testWritesAnEmptyGraphForAProjectWithoutClasses(): void
+    {
+        self::assertSame(0, $this->analyze($this->tmpDir));
+        self::assertSame(0, json_decode($this->last['stdout'], true)['meta']['class_count']);
+    }
+
+    public function testExcludesEveryDirectoryGiven(): void
+    {
+        foreach (['tests', 'fixtures', 'src'] as $dir) {
+            mkdir($this->tmpDir . '/' . $dir);
+            file_put_contents("{$this->tmpDir}/{$dir}/C.php", "<?php namespace App\\{$dir}; class C {}");
+        }
+
+        $this->analyze($this->tmpDir, '--exclude=tests', '--exclude', 'fixtures', '-w1');
+
+        self::assertSame(['App\src\C'], array_column(json_decode($this->last['stdout'], true)['classes'], 'fqcn'));
+
+        foreach (['tests', 'fixtures', 'src'] as $dir) {
+            unlink("{$this->tmpDir}/{$dir}/C.php");
+            rmdir("{$this->tmpDir}/{$dir}");
+        }
+    }
+
+    public function testReadsAPathAfterTheEndOfOptions(): void
+    {
+        self::assertSame(2, $this->analyze('--', '-missing'));
+        self::assertStringContainsString('Path not found: -missing', $this->last['stderr']);
+    }
+
+    public function testRejectsTwoPaths(): void
+    {
+        self::assertSame(2, $this->analyze($this->tmpDir, $this->tmpDir));
+        self::assertStringContainsString('Only one path', $this->last['stderr']);
+    }
+
+    public function testRejectsAnOptionWithoutItsValue(): void
+    {
+        self::assertSame(2, $this->analyze($this->tmpDir, '--exclude'));
+        self::assertStringContainsString('The --exclude option needs a value', $this->last['stderr']);
+    }
 }
