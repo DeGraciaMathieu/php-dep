@@ -4,27 +4,30 @@ PHP command-line dependency extractor. Writes the class dependency graph of a pr
 
 ## Installation
 
+Download the PHAR of the latest release, it holds everything it needs:
+
+```bash
+wget https://github.com/DeGraciaMathieu/php-dep/releases/latest/download/php-dep.phar
+php php-dep.phar --version
+```
+
+Or run it from the sources:
+
 ```bash
 git clone https://github.com/DeGraciaMathieu/php-dep.git
 cd php-dep
 composer install
-chmod +x bin/php-dep
-```
-
-For global access:
-
-```bash
-ln -s /absolute/path/to/bin/php-dep /usr/local/bin/php-dep
+bin/php-dep --version
 ```
 
 ## Quick start
 
 ```bash
 # Analyze the current directory
-./bin/php-dep analyze
+php php-dep.phar
 
 # Analyze a specific project
-./bin/php-dep analyze /path/to/project/src > graph.json
+php php-dep.phar /path/to/project/src > graph.json
 ```
 
 ## `analyze` command
@@ -62,22 +65,22 @@ php-dep [analyze] [<path>] [options]
 
 ```bash
 # Count classes
-./bin/php-dep analyze src/ | jq '.meta.class_count'
+php php-dep.phar src/ | jq '.meta.class_count'
 
 # List all inheritance relationships
-./bin/php-dep analyze src/ | jq '[.edges[] | select(.type == "extends")]'
+php php-dep.phar src/ | jq '[.edges[] | select(.type == "extends")]'
 
 # Find classes with no dependants (leaves)
-./bin/php-dep analyze src/ | jq '[.classes[] | select(.dependants | length == 0) | .fqcn]'
+php php-dep.phar src/ | jq '[.classes[] | select(.dependants | length == 0) | .fqcn]'
 
 # Find dependencies of a specific class
-./bin/php-dep analyze src/ | jq '.classes[] | select(.fqcn == "App\\Service\\UserService") | .dependencies'
+php php-dep.phar src/ | jq '.classes[] | select(.fqcn == "App\\Service\\UserService") | .dependencies'
 ```
 
 ### Exclude directories
 
 ```bash
-./bin/php-dep analyze . --exclude=tests --exclude=fixtures --exclude=migrations
+php php-dep.phar . --exclude=tests --exclude=fixtures --exclude=migrations
 ```
 
 ### Analysis without vendor
@@ -87,7 +90,7 @@ By default, the files of `vendor/` are not analyzed, but the third-party classes
 To analyze the vendor itself:
 
 ```bash
-./bin/php-dep analyze . --include-vendor
+php php-dep.phar . --include-vendor
 ```
 
 ---
@@ -184,5 +187,5 @@ The JSON output includes them in `warnings[]`.
 ## Requirements
 
 - PHP >= 8.2
-- Composer
+- Composer, only to run it from the sources
 - The `pcntl` extension, optional: without it, the files are parsed one after the other
