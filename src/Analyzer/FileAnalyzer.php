@@ -25,6 +25,6 @@ final class FileAnalyzer
      */
     public function analyze(string $file, AnalyzerConfig $config): array
     {
-        return $this->parser->parse($file, $config->skipDocblocks);
+        return $this->parser->parse($file, $config->docblocks);
     }
 }

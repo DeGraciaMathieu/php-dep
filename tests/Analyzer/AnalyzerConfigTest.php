@@ -13,7 +13,7 @@ final class AnalyzerConfigTest extends TestCase
     {
         $config = new AnalyzerConfig();
 
-        self::assertFalse($config->skipDocblocks);
+        self::assertFalse($config->docblocks);
         self::assertTrue($config->excludeVendor);
         self::assertSame('boundary', $config->vendorMode);
         self::assertSame([], $config->excludeDirs);
@@ -23,14 +23,14 @@ final class AnalyzerConfigTest extends TestCase
     public function testCustomValues(): void
     {
         $config = new AnalyzerConfig(
-            skipDocblocks:   true,
+            docblocks:       true,
             excludeVendor:   false,
             vendorMode:      'full',
             excludeDirs:     ['cache', 'tmp'],
             includePatterns: ['**/*.php'],
         );
 
-        self::assertTrue($config->skipDocblocks);
+        self::assertTrue($config->docblocks);
         self::assertFalse($config->excludeVendor);
         self::assertSame('full', $config->vendorMode);
         self::assertSame(['cache', 'tmp'], $config->excludeDirs);
@@ -39,9 +39,9 @@ final class AnalyzerConfigTest extends TestCase
 
     public function testPartialOverride(): void
     {
-        $config = new AnalyzerConfig(skipDocblocks: true);
+        $config = new AnalyzerConfig(docblocks: true);
 
-        self::assertTrue($config->skipDocblocks);
+        self::assertTrue($config->docblocks);
         // Remaining fields keep their defaults
         self::assertTrue($config->excludeVendor);
         self::assertSame('boundary', $config->vendorMode);

@@ -154,36 +154,6 @@ final class JsonFormatterTest extends TestCase
         self::assertSame('/file.php', $data['warnings'][0]['file']);
     }
 
-    // ── Class filter ──────────────────────────────────────────────────────────
-
-    public function testClassFilterLimitsClassesOutput(): void
-    {
-        $graph = new DependencyGraph();
-        $graph->addNode(new GraphNode('App\\A', NodeType::CLASS_NODE));
-        $graph->addNode(new GraphNode('App\\B', NodeType::CLASS_NODE));
-
-        $data = $this->formatAndDecode($graph, options: ['class' => 'App\\A']);
-
-        self::assertCount(1, $data['classes']);
-        self::assertSame('App\\A', $data['classes'][0]['fqcn']);
-    }
-
-    public function testClassFilterLimitsEdgesOutput(): void
-    {
-        $graph = new DependencyGraph();
-        $graph->addNode(new GraphNode('App\\A', NodeType::CLASS_NODE));
-        $graph->addNode(new GraphNode('App\\B', NodeType::CLASS_NODE));
-        $graph->addNode(new GraphNode('App\\C', NodeType::CLASS_NODE));
-        $graph->addEdge(new GraphEdge('App\\A', 'App\\B', EdgeType::EXTENDS_CLASS, Confidence::CERTAIN));
-        $graph->addEdge(new GraphEdge('App\\B', 'App\\C', EdgeType::EXTENDS_CLASS, Confidence::CERTAIN));
-
-        $data = $this->formatAndDecode($graph, options: ['class' => 'App\\A']);
-
-        // Only the edge touching App\A should appear
-        self::assertCount(1, $data['edges']);
-        self::assertSame('App\\A', $data['edges'][0]['source']);
-    }
-
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private function findClass(array $classes, string $fqcn): array

@@ -205,29 +205,7 @@ final class PhpFileParserTest extends TestCase
 
     // ── Docblock behaviour ────────────────────────────────────────────────────
 
-    public function testDocblocksProduceEdgesByDefault(): void
-    {
-        $this->write(<<<'PHP'
-            <?php
-            namespace App;
-            class Bar {}
-            class Foo {
-                /** @param Bar $b */
-                public function run($b): void {}
-            }
-            PHP);
-
-        $result = $this->parser->parse($this->tmpFile, false);
-
-        $docEdges = array_filter(
-            $result['edges'],
-            fn($e) => in_array($e->type->value, ['docblock_param', 'docblock_return', 'docblock_var', 'docblock_throws'], true),
-        );
-
-        self::assertNotEmpty($docEdges);
-    }
-
-    public function testSkipDocblocksOmitsDocblockEdges(): void
+    public function testDocblocksProduceEdgesWhenAskedFor(): void
     {
         $this->write(<<<'PHP'
             <?php
@@ -240,6 +218,28 @@ final class PhpFileParserTest extends TestCase
             PHP);
 
         $result = $this->parser->parse($this->tmpFile, true);
+
+        $docEdges = array_filter(
+            $result['edges'],
+            fn($e) => in_array($e->type->value, ['docblock_param', 'docblock_return', 'docblock_var', 'docblock_throws'], true),
+        );
+
+        self::assertNotEmpty($docEdges);
+    }
+
+    public function testDocblocksAreSkippedByDefault(): void
+    {
+        $this->write(<<<'PHP'
+            <?php
+            namespace App;
+            class Bar {}
+            class Foo {
+                /** @param Bar $b */
+                public function run($b): void {}
+            }
+            PHP);
+
+        $result = $this->parser->parse($this->tmpFile);
 
         $docEdges = array_filter(
             $result['edges'],

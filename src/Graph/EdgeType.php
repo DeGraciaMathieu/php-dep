@@ -15,6 +15,7 @@ enum EdgeType: string
     case PARAM_TYPE      = 'param_type';
     case RETURN_TYPE     = 'return_type';
     case PROPERTY_TYPE   = 'property_type';
+    case CONSTANT_TYPE   = 'constant_type';
     case ATTRIBUTE       = 'attribute';
 
     // Instantiation & calls

@@ -67,8 +67,8 @@ final class FileAnalyzerTest extends TestCase
             }
             PHP);
 
-        $withDocblocks    = $this->analyzer->analyze($this->tmpFile, new AnalyzerConfig(skipDocblocks: false));
-        $withoutDocblocks = $this->analyzer->analyze($this->tmpFile, new AnalyzerConfig(skipDocblocks: true));
+        $withDocblocks    = $this->analyzer->analyze($this->tmpFile, new AnalyzerConfig(docblocks: true));
+        $withoutDocblocks = $this->analyzer->analyze($this->tmpFile, new AnalyzerConfig(docblocks: false));
 
         $isDocblockEdge = fn($e) => str_starts_with($e->type->value, 'docblock_');
 

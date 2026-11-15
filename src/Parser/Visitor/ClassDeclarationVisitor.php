@@ -50,6 +50,7 @@ final class ClassDeclarationVisitor extends NodeVisitorAbstract
                 type: $nodeType,
                 file: $this->file,
                 line: $node->getStartLine() > 0 ? $node->getStartLine() : null,
+                abstract: $node instanceof Class_ && $node->isAbstract(),
             );
         }
 

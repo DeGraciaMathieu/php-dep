@@ -31,7 +31,7 @@ final class PhpFileParser
      *
      * @return array{nodes: GraphNode[], edges: GraphEdge[], warnings: AnalysisWarning[]}
      */
-    public function parse(string $file, bool $skipDocblocks = false): array
+    public function parse(string $file, bool $docblocks = false): array
     {
         $code = @file_get_contents($file);
         if ($code === false) {
@@ -72,7 +72,7 @@ final class PhpFileParser
 
         $classVisitor        = new ClassDeclarationVisitor($file);
         $relationshipVisitor = new RelationshipVisitor($file, $this->typeResolver);
-        $docblockVisitor     = $skipDocblocks ? null : new DocblockVisitor($file);
+        $docblockVisitor     = $docblocks ? new DocblockVisitor($file) : null;
 
         $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());

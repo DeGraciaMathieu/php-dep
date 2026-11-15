@@ -262,6 +262,42 @@ final class RelationshipVisitorTest extends TestCase
         self::assertCount(0, $selfEdges);
     }
 
+    // ── Attributes, closures and typed constants ──────────────────────────────
+
+    public function testExtractsAttributeEdge(): void
+    {
+        $visitor = $this->traverse('<?php namespace App; #[Entity] class Foo { #[Route] public function run(#[Inject] $x): void {} }');
+        $targets = array_map(fn($e) => $e->target, $this->edgesOfType($visitor, EdgeType::ATTRIBUTE));
+
+        self::assertSame(['App\\Entity', 'App\\Route', 'App\\Inject'], $targets);
+        self::assertSame('App\\Foo', $this->edgesOfType($visitor, EdgeType::ATTRIBUTE)[0]->source);
+    }
+
+    public function testExtractsClosureTypeHints(): void
+    {
+        $visitor = $this->traverse('<?php namespace App; class Foo { public function run(): void { $f = function (Bar $b): Baz {}; } }');
+
+        self::assertSame('App\\Bar', $this->edgesOfType($visitor, EdgeType::PARAM_TYPE)[0]->target);
+        self::assertContains('App\\Baz', array_map(fn($e) => $e->target, $this->edgesOfType($visitor, EdgeType::RETURN_TYPE)));
+    }
+
+    public function testExtractsArrowFunctionTypeHints(): void
+    {
+        $visitor = $this->traverse('<?php namespace App; class Foo { public function run(): void { $f = fn (Bar $b): Baz => $b; } }');
+
+        self::assertSame('App\\Bar', $this->edgesOfType($visitor, EdgeType::PARAM_TYPE)[0]->target);
+        self::assertContains('App\\Baz', array_map(fn($e) => $e->target, $this->edgesOfType($visitor, EdgeType::RETURN_TYPE)));
+    }
+
+    public function testExtractsTypedConstantEdge(): void
+    {
+        $visitor = $this->traverse('<?php namespace App; class Foo { const Status DEFAULT = Status::Draft; }');
+        $edges   = $this->edgesOfType($visitor, EdgeType::CONSTANT_TYPE);
+
+        self::assertCount(1, $edges);
+        self::assertSame('App\\Status', $edges[0]->target);
+    }
+
     // ── Context isolation ─────────────────────────────────────────────────────
 
     public function testNoEdgesProducedOutsideClassContext(): void
