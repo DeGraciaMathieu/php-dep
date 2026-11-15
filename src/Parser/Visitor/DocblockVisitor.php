@@ -7,6 +7,7 @@ namespace PhpDep\Parser\Visitor;
 use PhpDep\Graph\Confidence;
 use PhpDep\Graph\EdgeType;
 use PhpDep\Graph\GraphEdge;
+use PhpDep\Parser\ClassScope;
 use PHPStan\PhpDocParser\Ast\PhpDoc\InvalidTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode;
@@ -23,12 +24,8 @@ use PHPStan\PhpDocParser\Parser\TokenIterator;
 use PHPStan\PhpDocParser\Parser\TypeParser;
 use PhpParser\Comment\Doc;
 use PhpParser\Node;
-use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\Node\Stmt\Enum_;
-use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeVisitorAbstract;
 
 final class DocblockVisitor extends NodeVisitorAbstract
@@ -36,10 +33,8 @@ final class DocblockVisitor extends NodeVisitorAbstract
     /** @var GraphEdge[] */
     private array $edges = [];
 
-    /** @var string[] class FQCN stack */
-    private array $classStack = [];
-
     private string $file;
+    private ClassScope $scope;
     private Lexer $lexer;
     private PhpDocParser $parser;
 
@@ -51,9 +46,10 @@ final class DocblockVisitor extends NodeVisitorAbstract
         '$this', 'list', 'non-empty-array', 'non-empty-string',
     ];
 
-    public function __construct(string $file)
+    public function __construct(string $file, ClassScope $scope)
     {
         $this->file   = $file;
+        $this->scope  = $scope;
         $this->lexer  = new Lexer();
         $constExprParser = new ConstExprParser();
         $typeParser   = new TypeParser($constExprParser);
@@ -62,17 +58,9 @@ final class DocblockVisitor extends NodeVisitorAbstract
 
     public function enterNode(Node $node): null
     {
-        if ($node instanceof Class_ && $node->name !== null) {
-            $this->classStack[] = (string) $node->namespacedName;
-        } elseif ($node instanceof Interface_) {
-            $this->classStack[] = (string) $node->namespacedName;
-        } elseif ($node instanceof Trait_) {
-            $this->classStack[] = (string) $node->namespacedName;
-        } elseif ($node instanceof Enum_) {
-            $this->classStack[] = (string) $node->namespacedName;
-        }
+        $source = $this->scope->current();
 
-        if (empty($this->classStack)) {
+        if ($source === null) {
             return null;
         }
 
@@ -82,16 +70,7 @@ final class DocblockVisitor extends NodeVisitorAbstract
         }
 
         if ($node instanceof ClassMethod || $node instanceof Property) {
-            $this->parseDocblock($docComment, end($this->classStack), $node->getStartLine());
-        }
-
-        return null;
-    }
-
-    public function leaveNode(Node $node): null
-    {
-        if ($node instanceof Class_ || $node instanceof Interface_ || $node instanceof Trait_ || $node instanceof Enum_) {
-            array_pop($this->classStack);
+            $this->parseDocblock($docComment, $source, $node->getStartLine());
         }
 
         return null;

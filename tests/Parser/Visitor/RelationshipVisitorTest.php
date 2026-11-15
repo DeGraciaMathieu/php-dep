@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpDep\Tests\Parser\Visitor;
 
 use PhpDep\Graph\EdgeType;
+use PhpDep\Parser\ClassScope;
 use PhpDep\Parser\TypeResolver;
 use PhpDep\Parser\Visitor\RelationshipVisitor;
 use PhpDep\Warning\WarningType;
@@ -20,9 +21,11 @@ final class RelationshipVisitorTest extends TestCase
         $parser    = (new ParserFactory())->createForNewestSupportedVersion();
         $stmts     = $parser->parse($code);
         $traverser = new NodeTraverser();
-        $visitor   = new RelationshipVisitor($file, new TypeResolver());
+        $scope     = new ClassScope();
+        $visitor   = new RelationshipVisitor($file, new TypeResolver(), $scope);
 
         $traverser->addVisitor(new NameResolver());
+        $traverser->addVisitor($scope);
         $traverser->addVisitor($visitor);
         $traverser->traverse($stmts);
 
@@ -296,6 +299,34 @@ final class RelationshipVisitorTest extends TestCase
 
         self::assertCount(1, $edges);
         self::assertSame('App\\Status', $edges[0]->target);
+    }
+
+    // ── Anonymous classes ─────────────────────────────────────────────────────
+
+    public function testAnonymousClassGivesItsRelationsToTheDeclaringClass(): void
+    {
+        $visitor = $this->traverse('<?php namespace App; class Foo { public function run(): Cast { return new class extends Base implements Cast {}; } }');
+
+        self::assertSame(['App\\Base'], array_map(fn($e) => $e->target, $this->edgesOfType($visitor, EdgeType::EXTENDS_CLASS)));
+        self::assertSame(['App\\Cast'], array_map(fn($e) => $e->target, $this->edgesOfType($visitor, EdgeType::IMPLEMENTS_INTERFACE)));
+        self::assertSame('App\\Foo', $this->edgesOfType($visitor, EdgeType::EXTENDS_CLASS)[0]->source);
+    }
+
+    public function testDependenciesAfterAnAnonymousClassAreKept(): void
+    {
+        $visitor = $this->traverse('<?php namespace App; class Foo { public function run(): void { $a = new class {}; $b = new Bar(); } }');
+        $edges   = $this->edgesOfType($visitor, EdgeType::INSTANTIATES);
+
+        self::assertCount(1, $edges);
+        self::assertSame('App\\Foo', $edges[0]->source);
+        self::assertSame('App\\Bar', $edges[0]->target);
+    }
+
+    public function testAnonymousClassIsNotADynamicInstantiation(): void
+    {
+        $visitor = $this->traverse('<?php namespace App; class Foo { public function run(): void { $a = new class {}; } }');
+
+        self::assertEmpty($visitor->getWarnings());
     }
 
     // ── Context isolation ─────────────────────────────────────────────────────

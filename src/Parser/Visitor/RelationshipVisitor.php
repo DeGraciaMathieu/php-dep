@@ -7,6 +7,7 @@ namespace PhpDep\Parser\Visitor;
 use PhpDep\Graph\Confidence;
 use PhpDep\Graph\EdgeType;
 use PhpDep\Graph\GraphEdge;
+use PhpDep\Parser\ClassScope;
 use PhpDep\Parser\TypeResolver;
 use PhpDep\Warning\AnalysisWarning;
 use PhpDep\Warning\WarningType;
@@ -25,7 +26,6 @@ use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\TraitUse;
 use PhpParser\NodeVisitorAbstract;
 
@@ -37,39 +37,33 @@ final class RelationshipVisitor extends NodeVisitorAbstract
     /** @var AnalysisWarning[] */
     private array $warnings = [];
 
-    /** @var string[] class FQCN stack */
-    private array $classStack = [];
-
     private TypeResolver $typeResolver;
+    private ClassScope $scope;
     private string $file;
 
-    public function __construct(string $file, TypeResolver $typeResolver)
+    public function __construct(string $file, TypeResolver $typeResolver, ClassScope $scope)
     {
         $this->file         = $file;
         $this->typeResolver = $typeResolver;
+        $this->scope        = $scope;
     }
 
     public function enterNode(Node $node): null
     {
-        // Track current class context
-        if ($node instanceof Class_ && $node->name !== null) {
-            $this->classStack[] = (string) $node->namespacedName;
-            $this->extractClassRelations($node);
-        } elseif ($node instanceof Interface_) {
-            $this->classStack[] = (string) $node->namespacedName;
-            $this->extractInterfaceRelations($node);
-        } elseif ($node instanceof Trait_) {
-            $this->classStack[] = (string) $node->namespacedName;
-        } elseif ($node instanceof Enum_) {
-            $this->classStack[] = (string) $node->namespacedName;
-            $this->extractEnumRelations($node);
-        }
+        $source = $this->scope->current();
 
-        if (empty($this->classStack)) {
+        if ($source === null) {
             return null;
         }
 
-        $source = end($this->classStack);
+        // An anonymous class gives its relations to the class that declares it
+        if ($node instanceof Class_) {
+            $this->extractClassRelations($source, $node);
+        } elseif ($node instanceof Interface_) {
+            $this->extractInterfaceRelations($source, $node);
+        } elseif ($node instanceof Enum_) {
+            $this->extractEnumRelations($source, $node);
+        }
 
         // Trait use statements
         if ($node instanceof TraitUse) {
@@ -106,7 +100,7 @@ final class RelationshipVisitor extends NodeVisitorAbstract
         if ($node instanceof New_) {
             if ($node->class instanceof Name) {
                 $this->addEdge($source, (string) $node->class, EdgeType::INSTANTIATES, Confidence::CERTAIN, $node->getStartLine());
-            } else {
+            } elseif (!$node->class instanceof Class_) {
                 $this->warnings[] = new AnalysisWarning(
                     WarningType::DYNAMIC_INSTANTIATION,
                     $this->file,
@@ -147,19 +141,8 @@ final class RelationshipVisitor extends NodeVisitorAbstract
         return null;
     }
 
-    public function leaveNode(Node $node): null
+    private function extractClassRelations(string $source, Class_ $node): void
     {
-        if ($node instanceof Class_ || $node instanceof Interface_ || $node instanceof Trait_ || $node instanceof Enum_) {
-            array_pop($this->classStack);
-        }
-
-        return null;
-    }
-
-    private function extractClassRelations(Class_ $node): void
-    {
-        $source = (string) $node->namespacedName;
-
         if ($node->extends !== null) {
             $this->addEdge($source, (string) $node->extends, EdgeType::EXTENDS_CLASS, Confidence::CERTAIN, $node->getStartLine());
         }
@@ -169,19 +152,15 @@ final class RelationshipVisitor extends NodeVisitorAbstract
         }
     }
 
-    private function extractInterfaceRelations(Interface_ $node): void
+    private function extractInterfaceRelations(string $source, Interface_ $node): void
     {
-        $source = (string) $node->namespacedName;
-
         foreach ($node->extends as $parent) {
             $this->addEdge($source, (string) $parent, EdgeType::EXTENDS_CLASS, Confidence::CERTAIN, $node->getStartLine());
         }
     }
 
-    private function extractEnumRelations(Enum_ $node): void
+    private function extractEnumRelations(string $source, Enum_ $node): void
     {
-        $source = (string) $node->namespacedName;
-
         foreach ($node->implements as $iface) {
             $this->addEdge($source, (string) $iface, EdgeType::IMPLEMENTS_INTERFACE, Confidence::CERTAIN, $node->getStartLine());
         }
