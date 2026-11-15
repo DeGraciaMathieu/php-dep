@@ -6,17 +6,18 @@ namespace PhpDep\Analyzer;
 
 use PhpDep\Discovery\FileDiscovery;
 use PhpDep\Graph\DependencyGraph;
+use PhpDep\Parser\PhpFileParser;
 use PhpDep\Warning\AnalysisWarning;
 
 final class ProjectAnalyzer
 {
     private FileDiscovery $discovery;
-    private FileAnalyzer  $fileAnalyzer;
+    private PhpFileParser $parser;
 
     public function __construct()
     {
-        $this->discovery    = new FileDiscovery();
-        $this->fileAnalyzer = new FileAnalyzer();
+        $this->discovery = new FileDiscovery();
+        $this->parser    = new PhpFileParser();
     }
 
     /**
@@ -29,22 +30,22 @@ final class ProjectAnalyzer
         $files   = $this->discovery->discover($path, $config->excludeDirs, $config->excludeVendor);
         $results = (new WorkerPool($config->workers))->map(
             $files,
-            fn(string $file) => $this->fileAnalyzer->analyze($file, $config),
+            fn(string $file) => $this->parser->parse($file),
         );
 
         $graph    = new DependencyGraph();
         $warnings = [];
 
-        foreach ($results as $result) {
-            foreach ($result['nodes'] as $node) {
+        foreach ($results as $parsed) {
+            foreach ($parsed->nodes as $node) {
                 $graph->addNode($node);
             }
 
-            foreach ($result['edges'] as $edge) {
+            foreach ($parsed->edges as $edge) {
                 $graph->addEdge($edge);
             }
 
-            array_push($warnings, ...$result['warnings']);
+            array_push($warnings, ...$parsed->warnings);
         }
 
         return [
