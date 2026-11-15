@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 326" width="780" height="326" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<style>text{fill:#1e1b16}.sub{fill:#6b6357;font-size:11px}.hot{fill:#b5121b;font-size:11px;font-weight:600}.new{fill:#2f7d4f;font-size:11px;font-weight:600}.legend{fill:#6b6357;font-size:12px}.count{fill:#6b6357;font-size:14px;font-weight:600}</style>
+<defs>
+<marker id="arrow-edge" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#a8998a"/></marker>
+<marker id="arrow-added" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2f7d4f"/></marker>
+</defs>
+<rect width="780" height="326" fill="#ffffff"/>
+<text x="20" y="28" font-size="14" font-weight="600">1 class touched out of 21 · 0 dependencies added</text>
+<g transform="translate(0 -2)">
+<path d="M386.4 102.6 Q378.8 150.0 384.4 184.8" fill="none" stroke="#a8998a" stroke-width="3.8" stroke-linecap="round" opacity="0.8" marker-end="url(#arrow-edge)"><title>Cli → Analyzer: 3 dependencies, 0 added</title></path>
+<circle cx="390" cy="220" r="31.7" fill="none" stroke="#e6dfd2" stroke-width="5"/>
+<circle cx="390" cy="220" r="31.7" fill="none" stroke="#b5121b" stroke-width="5" stroke-dasharray="39.8 198.9" transform="rotate(-90 390 220)"/>
+<rect x="340.9" y="155.8" width="98.2" height="17" rx="3" fill="#fbe8e8" opacity="0.92"/>
+<text x="390" y="168.3" text-anchor="middle" class="hot">1 of 5 changed</text>
+<circle cx="390" cy="220" r="25.7" fill="#efe9dd" stroke="#1e1b16" stroke-width="1.2"/>
+<text x="390" y="225.0" text-anchor="middle" class="count">5</text>
+<rect x="310.8" y="257.2" width="158.4" height="17" rx="3" fill="#ffffff" opacity="0.92"/>
+<text x="390" y="269.7" text-anchor="middle" font-size="12.5" font-weight="600">Analyzer<tspan dx="6" class="sub">cohesion 67 %</tspan></text>
+<circle cx="390" cy="80" r="19.9" fill="#efe9dd" stroke="#1e1b16" stroke-width="1.2"/>
+<text x="390" y="85.0" text-anchor="middle" class="count">2</text>
+<rect x="329.3" y="111.4" width="121.4" height="17" rx="3" fill="#ffffff" opacity="0.92"/>
+<text x="390" y="123.9" text-anchor="middle" font-size="12.5" font-weight="600">Cli<tspan dx="6" class="sub">cohesion 14 %</tspan></text>
+<path d="M386.4 102.6 Q378.8 150.0 384.4 184.8" fill="none" stroke="none" marker-end="url(#arrow-edge)"/>
+</g>
+<circle cx="25" cy="304" r="5" fill="none" stroke="#b5121b" stroke-width="3"/>
+<text x="36" y="308" class="legend">classes changed</text>
+<circle cx="153" cy="304" r="5" fill="none" stroke="#2f7d4f" stroke-width="3"/>
+<text x="164" y="308" class="legend">classes added</text>
+<line x1="263" y1="304" x2="281" y2="304" stroke="#2f7d4f" stroke-width="3"/>
+<text x="287" y="308" class="legend">dependency added</text>
+<line x1="405" y1="304" x2="423" y2="304" stroke="#a8998a" stroke-width="3"/>
+<text x="429" y="308" class="legend">existing dependency touched</text>
+</svg>
