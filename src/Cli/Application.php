@@ -13,7 +13,7 @@ use PhpDep\Warning\WarningType;
 
 final class Application
 {
-    private const VERSION = '2.0.0';
+    private const VERSION = '3.0.0';
 
     public const SUCCESS = 0;
     public const FAILURE = 1;
