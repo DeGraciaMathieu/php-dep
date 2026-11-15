@@ -26,7 +26,7 @@ final class ProjectAnalyzer
      */
     public function analyze(string $path, AnalyzerConfig $config): array
     {
-        $files   = $this->discovery->discover($path, $config);
+        $files   = $this->discovery->discover($path, $config->excludeDirs, $config->excludeVendor);
         $results = (new WorkerPool($config->workers))->map(
             $files,
             fn(string $file) => $this->fileAnalyzer->analyze($file, $config),

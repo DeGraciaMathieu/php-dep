@@ -1,0 +1,76 @@
+name: Dependencies
+
+on: pull_request
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: class-dependencies-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Download the analyzer
+        run: wget -q https://github.com/DeGraciaMathieu/php-class-dependencies-analyzer/raw/main/builds/class-dependencies-analyzer
+
+      # The exit code is kept for the last step, so that a violation is still commented.
+      - name: Analyze the dependencies
+        id: analyze
+        run: |
+          set +e
+          php class-dependencies-analyzer analyze > report.txt
+          echo "status=$?" >> "$GITHUB_OUTPUT"
+          php class-dependencies-analyzer analyze --format=html --output=dependencies.html > /dev/null
+          cat report.txt
+
+      - name: Keep the report
+        id: report
+        uses: actions/upload-artifact@v4
+        with:
+          name: class-dependencies-report
+          path: dependencies.html
+
+      - name: Comment on the pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          STATUS: ${{ steps.analyze.outputs.status }}
+          REPORT_URL: ${{ steps.report.outputs.artifact-url }}
+        run: |
+          if [ "$STATUS" = 0 ]; then verdict="No new violation."; else verdict="**New violations**: the job fails."; fi
+          {
+            echo "<!-- class-dependencies -->"
+            echo "### Dependencies between contexts"
+            echo
+            echo "$verdict"
+            echo
+            echo '```'
+            cat report.txt
+            echo '```'
+            echo
+            echo "[Explore the graph]($REPORT_URL): download the report, then open \`dependencies.html\`."
+          } > comment.md
+          cat comment.md >> "$GITHUB_STEP_SUMMARY"
+          comment=$(gh api "repos/$REPO/issues/$PR/comments" --paginate --jq '.[] | select(.body | startswith("<!-- class-dependencies -->")) | .id' | head -n 1)
+          if [ -n "$comment" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$comment" -F body=@comment.md > /dev/null
+          else
+            gh pr comment "$PR" --repo "$REPO" --body-file comment.md
+          fi
+
+      - name: Fail on a new violation
+        if: steps.analyze.outputs.status != '0'
+        run: exit 1
