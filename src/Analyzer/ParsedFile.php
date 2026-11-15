@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PhpDep\Parser;
+namespace PhpDep\Analyzer;
 
 use PhpDep\Graph\GraphEdge;
 use PhpDep\Graph\GraphNode;

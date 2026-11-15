@@ -8,6 +8,7 @@ use PhpDep\Analyzer\AnalyzerConfig;
 use PhpDep\Analyzer\ProjectAnalyzer;
 use PhpDep\Analyzer\WorkerPool;
 use PhpDep\Output\JsonFormatter;
+use PhpDep\Parser\PhpFileParser;
 use PhpDep\Warning\WarningType;
 
 final class Application
@@ -75,7 +76,7 @@ final class Application
         );
 
         try {
-            $result = (new ProjectAnalyzer())->analyze($resolvedPath, $config);
+            $result = (new ProjectAnalyzer(new PhpFileParser()))->analyze($resolvedPath, $config);
         } catch (\Throwable $e) {
             fwrite($stderr, sprintf("Analysis failed: %s\n", $e->getMessage()));
             return self::FAILURE;

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PhpDep\Parser;
 
+use PhpDep\Analyzer\FileParser;
+use PhpDep\Analyzer\ParsedFile;
 use PhpDep\Parser\Visitor\ClassDeclarationVisitor;
 use PhpDep\Parser\Visitor\RelationshipVisitor;
 use PhpDep\Warning\AnalysisWarning;
@@ -12,7 +14,7 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\ParserFactory;
 
-final class PhpFileParser
+final class PhpFileParser implements FileParser
 {
     private \PhpParser\Parser $parser;
     private TypeResolver $typeResolver;

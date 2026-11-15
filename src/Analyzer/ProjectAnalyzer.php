@@ -6,18 +6,16 @@ namespace PhpDep\Analyzer;
 
 use PhpDep\Discovery\FileDiscovery;
 use PhpDep\Graph\DependencyGraph;
-use PhpDep\Parser\PhpFileParser;
 use PhpDep\Warning\AnalysisWarning;
 
 final class ProjectAnalyzer
 {
     private FileDiscovery $discovery;
-    private PhpFileParser $parser;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly FileParser $parser,
+    ) {
         $this->discovery = new FileDiscovery();
-        $this->parser    = new PhpFileParser();
     }
 
     /**
