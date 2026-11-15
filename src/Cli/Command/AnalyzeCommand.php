@@ -34,7 +34,6 @@ final class AnalyzeCommand extends Command
             ->addOption('exclude',        null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Directories to exclude')
             ->addOption('no-vendor',      null, InputOption::VALUE_NONE,    'Exclude vendor directory (default)')
             ->addOption('include-vendor', null, InputOption::VALUE_NONE,    'Include vendor directory in analysis')
-            ->addOption('docblocks',      null, InputOption::VALUE_NONE,    'Also read @param/@return/@var/@throws docblocks')
             ->addOption('workers',        'w',  InputOption::VALUE_REQUIRED, 'Number of parallel processes, the CPU count by default')
         ;
     }
@@ -63,7 +62,6 @@ final class AnalyzeCommand extends Command
 
         $excludeVendor = !$input->getOption('include-vendor');
         $config        = new AnalyzerConfig(
-            docblocks:     (bool) $input->getOption('docblocks'),
             excludeVendor: $excludeVendor,
             vendorMode:    $excludeVendor ? 'boundary' : 'full',
             excludeDirs:   $input->getOption('exclude'),

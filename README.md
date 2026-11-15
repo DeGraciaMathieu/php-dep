@@ -41,7 +41,6 @@ php-dep analyze [<path>] [options]
 |---|---|---|
 | `--exclude=dir` | | Exclude a directory (can be used multiple times) |
 | `--include-vendor` | | Include the `vendor/` directory in the analysis |
-| `--docblocks` | | Also read `@param`/`@return`/`@var`/`@throws` annotations |
 | `--workers=N` | `-w` | Number of parallel processes (default: the CPU count, `1` to stay sequential) |
 
 ### Exit codes
@@ -160,23 +159,11 @@ To analyze the vendor itself:
 | `instanceof` | `$x instanceof Foo` |
 | `catches` | `catch (FooException $e)` |
 
-### Tier 2 — High confidence (docblocks)
-
-Read only with `--docblocks`, from `@param`, `@return`, `@var`, `@throws`. Confidence: `high`.
-
-| Type | Source |
-|---|---|
-| `docblock_param` | `@param FooType $x` |
-| `docblock_return` | `@return FooType` |
-| `docblock_var` | `@var FooType` |
-| `docblock_throws` | `@throws FooException` |
-
 ### Confidence levels
 
 | Value | Meaning |
 |---|---|
 | `certain` | Structural relationship guaranteed by the AST |
-| `high` | Docblock, highly probable |
 | `medium` | Ambiguous pattern (`instanceof`) |
 | `low` | Dynamic pattern |
 
@@ -199,7 +186,6 @@ The JSON output includes them in `warnings[]`.
 - **Discovery**: `git ls-files` if inside a git repository, otherwise `RecursiveDirectoryIterator`. The `vendor/`, `node_modules/`, and `.git/` directories are excluded by default.
 - **Parsing**: [nikic/PHP-Parser](https://github.com/nikic/PHP-Parser) v5. The `NameResolver` runs first in the traverser: all downstream names are resolved FQCNs.
 - **Parallelism**: with the `pcntl` extension, the files are spread over forked processes; without it, they are parsed one after the other. The output is the same whatever the number of workers.
-- **Docblocks**: [phpstan/phpdoc-parser](https://github.com/phpstan/phpdoc-parser) for `@param`, `@return`, `@var`, `@throws`, with `--docblocks`.
 - **Memory**: each file's AST is freed immediately after extraction. Each process holds one AST at a time.
 - **Vendor**: in `boundary` mode (default), vendor classes are `external` nodes (leaves) — their files are not analyzed.
 

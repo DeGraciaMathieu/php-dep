@@ -7,9 +7,6 @@ namespace PhpDep\Analyzer;
 final readonly class AnalyzerConfig
 {
     public function __construct(
-        /** Read @param/@return/@var/@throws docblocks too */
-        public bool   $docblocks      = false,
-
         /** Exclude vendor directory from file discovery */
         public bool   $excludeVendor  = true,
 
