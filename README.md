@@ -5,7 +5,7 @@ PHP command-line dependency extractor. Writes the class dependency graph of a pr
 ## Installation
 
 ```bash
-git clone <repo>
+git clone https://github.com/DeGraciaMathieu/php-dep.git
 cd php-dep
 composer install
 chmod +x bin/php-dep
