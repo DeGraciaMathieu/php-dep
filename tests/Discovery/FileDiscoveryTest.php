@@ -137,6 +137,67 @@ final class FileDiscoveryTest extends TestCase
         self::assertStringContainsString('A.php', $result[0]);
     }
 
+    public function testVendorDirIsIncludedOnDemand(): void
+    {
+        mkdir($this->tmpDir . '/vendor');
+        file_put_contents($this->tmpDir . '/vendor/Lib.php', '<?php class Lib {}');
+
+        $result = $this->discovery->discover($this->tmpDir, excludeVendor: false);
+
+        self::assertCount(1, $result);
+    }
+
+    public function testDirectoryInsideAVendorDirCanBeAnalyzed(): void
+    {
+        mkdir($this->tmpDir . '/vendor/acme/lib', 0777, true);
+        file_put_contents($this->tmpDir . '/vendor/acme/lib/Lib.php', '<?php class Lib {}');
+
+        $result = $this->discovery->discover($this->tmpDir . '/vendor/acme/lib');
+
+        self::assertCount(1, $result);
+    }
+
+    public function testNestedExcludedPathIsRespected(): void
+    {
+        file_put_contents($this->tmpDir . '/A.php', '<?php class A {}');
+        mkdir($this->tmpDir . '/bootstrap/cache', 0777, true);
+        file_put_contents($this->tmpDir . '/bootstrap/cache/services.php', '<?php return [];');
+        file_put_contents($this->tmpDir . '/bootstrap/app.php', '<?php return 1;');
+
+        $result = $this->discovery->discover($this->tmpDir);
+
+        self::assertCount(2, $result);
+        self::assertStringEndsWith('/bootstrap/app.php', $result[1]);
+    }
+
+    // ── Git repository ────────────────────────────────────────────────────────
+
+    public function testGitRepositoryAppliesTheSameExclusions(): void
+    {
+        file_put_contents($this->tmpDir . '/A.php', '<?php class A {}');
+        mkdir($this->tmpDir . '/storage');
+        file_put_contents($this->tmpDir . '/storage/Cached.php', '<?php class Cached {}');
+        exec(sprintf('git init -q %s', escapeshellarg($this->tmpDir)));
+
+        $result = $this->discovery->discover($this->tmpDir);
+
+        self::assertCount(1, $result);
+        self::assertStringEndsWith('/A.php', $result[0]);
+    }
+
+    public function testGitRepositoryLeavesIgnoredFilesOut(): void
+    {
+        file_put_contents($this->tmpDir . '/A.php', '<?php class A {}');
+        file_put_contents($this->tmpDir . '/Generated.php', '<?php class Generated {}');
+        file_put_contents($this->tmpDir . '/.gitignore', "Generated.php\n");
+        exec(sprintf('git init -q %s', escapeshellarg($this->tmpDir)));
+
+        $result = $this->discovery->discover($this->tmpDir);
+
+        self::assertCount(1, $result);
+        self::assertStringEndsWith('/A.php', $result[0]);
+    }
+
     public function testResultIsSorted(): void
     {
         file_put_contents($this->tmpDir . '/Z.php', '<?php class Z {}');
