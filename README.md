@@ -95,6 +95,29 @@ php php-dep.phar . --include-vendor
 
 ---
 
+## Use as a library
+
+```bash
+composer config repositories.php-dep vcs https://github.com/DeGraciaMathieu/php-dep
+composer require degraciamathieu/php-dep
+```
+
+```php
+use PhpDep\Api\PhpDep;
+
+$analysis = PhpDep::analyze('src');           // in parallel, over the CPU count; PhpDep::analyze('src', workers: 1) to stay sequential
+
+$analysis->classes();                         // ['App\Catalog\Product', 'App\Shop\Cart']: the classes declared in the project, sorted
+$analysis->dependenciesOf('App\Shop\Cart');   // ['App\Catalog\Product', 'DateTime']: what it uses, once and sorted, project and external classes alike
+$analysis->isDeclared('DateTime');            // false: an external class
+$analysis->fileOf('App\Shop\Cart');           // '/real/path/to/src/Shop/Cart.php'
+$analysis->parseErrors();                     // ['/real/path/to/src/Broken.php' => 'Parse error: …']
+```
+
+`PhpDep\Api\PhpDep` and `PhpDep\Api\Analysis` are covered by the version of php-dep, like the JSON output. Every other class is internal and may change in any release.
+
+---
+
 ## JSON output structure
 
 ```jsonc
