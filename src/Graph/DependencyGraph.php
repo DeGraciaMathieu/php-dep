@@ -18,6 +18,9 @@ final class DependencyGraph
     /** @var GraphEdge[] */
     private array $allEdges = [];
 
+    /** @var array<string, string> lowercase FQCN → FQCN as declared, or as first written for an external class */
+    private array $names = [];
+
     public function addNode(GraphNode $node): void
     {
         // Don't overwrite a known node with an external placeholder
@@ -25,10 +28,22 @@ final class DependencyGraph
             return;
         }
         $this->nodes[$node->fqcn] = $node;
+        $this->names[strtolower($node->fqcn)] = $node->fqcn;
     }
 
     public function addEdge(GraphEdge $edge): void
     {
+        // PHP reads a class name whatever its case: the edge points to the class as it is declared
+        $target = $this->names[strtolower($edge->target)] ??= $edge->target;
+
+        if ($target === $edge->source) {
+            return;
+        }
+
+        if ($target !== $edge->target) {
+            $edge = new GraphEdge($edge->source, $target, $edge->type, $edge->file, $edge->line);
+        }
+
         // Ensure both endpoints exist as nodes (external if unknown)
         foreach ([$edge->source, $edge->target] as $fqcn) {
             if (!isset($this->nodes[$fqcn])) {

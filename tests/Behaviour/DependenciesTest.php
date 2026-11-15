@@ -56,6 +56,8 @@ final class DependenciesTest extends TestCase
             'aliased import'             => ['class Cart { public function add(Item $p): void {} }', ['App\Catalog\Product'], false, 'use App\Catalog\Product as Item;'],
             'group import'               => ['class Cart { public function add(Product $p): void {} }', ['App\Catalog\Product'], false, 'use App\Catalog\{Product};'],
             'imported namespace'         => ['class Cart { public function add(Catalog\Product $p): void {} }', ['App\Catalog\Product'], false, 'use App\Catalog;'],
+            'name in another case'       => ['class Cart { public function make(): void { new \app\catalog\product(); } }', ['App\Catalog\Product'], false],
+            'name in two cases'          => ['class Cart { public function make(\App\Catalog\Product $p): void { new \APP\CATALOG\PRODUCT(); } }', ['App\Catalog\Product'], false],
         ];
     }
 
@@ -85,6 +87,24 @@ final class DependenciesTest extends TestCase
 
         self::assertSame(['App\Catalog\Product'], $analysis->dependenciesOf('App\Shop\Status'));
         self::assertSame(['App\Catalog\Product'], $analysis->dependenciesOf('App\Shop\Basket'));
+    }
+
+    public function testKeepsOneSpellingOfAnExternalClass(): void
+    {
+        $project = Project::with([
+            'Shop/Cart.php' => '<?php namespace App\Shop; class Cart { public function at(\DateTime $d): \datetime {} }',
+        ]);
+
+        self::assertSame(['DateTime'], Analysis::of($project->root)->dependenciesOf('App\Shop\Cart'));
+    }
+
+    public function testDoesNotCountItselfWrittenInAnotherCase(): void
+    {
+        $project = Project::with([
+            'Shop/Cart.php' => '<?php namespace App\Shop; class Cart { public function copy(): void { new \app\shop\cart(); } }',
+        ]);
+
+        self::assertSame([], Analysis::of($project->root)->dependenciesOf('App\Shop\Cart'));
     }
 
     public function testIgnoresANameTheCodeDoesNotUse(): void

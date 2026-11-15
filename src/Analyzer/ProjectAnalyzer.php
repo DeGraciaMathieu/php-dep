@@ -36,11 +36,14 @@ final class ProjectAnalyzer
         $graph    = new DependencyGraph();
         $warnings = [];
 
+        // Every declared class first, so that an edge finds its target whatever the order of the files
         foreach ($results as $parsed) {
             foreach ($parsed->nodes as $node) {
                 $graph->addNode($node);
             }
+        }
 
+        foreach ($results as $parsed) {
             foreach ($parsed->edges as $edge) {
                 $graph->addEdge($edge);
             }
