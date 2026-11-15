@@ -3,6 +3,7 @@ name: Build PHAR
 on:
   push:
     branches: [main]
+  pull_request:
 
 jobs:
   build:
@@ -27,7 +28,10 @@ jobs:
         run: vendor/bin/box compile
 
       - name: Smoke test
-        run: php builds/php-dep.phar --version
+        run: |
+          php builds/php-dep.phar --version
+          # In parallel, the workers load nothing from the archive: see WorkerPool::loadEveryClass()
+          php builds/php-dep.phar vendor/nikic/php-parser/lib --include-vendor --workers=4 > /dev/null
 
       - name: Upload PHAR artifact
         uses: actions/upload-artifact@v4
