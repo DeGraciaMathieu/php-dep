@@ -49,6 +49,7 @@ final class GraphNodeTest extends TestCase
             'type' => 'class',
             'file' => '/path/to/Foo.php',
             'line' => 5,
+            'abstract' => false,
         ], $node->toArray());
     }
 

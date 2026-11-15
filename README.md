@@ -1,6 +1,6 @@
 # php-dep
 
-PHP command-line dependency analyzer. Extracts and visualizes all class relationships in a project: inheritance, interfaces, traits, injections, instantiations, static calls, docblocks.
+PHP command-line dependency extractor. Writes the class dependency graph of a project as JSON: inheritance, interfaces, traits, injections, instantiations, static calls, attributes. The files are parsed in parallel.
 
 ## Installation
 
@@ -24,13 +24,7 @@ ln -s /absolute/path/to/bin/php-dep /usr/local/bin/php-dep
 ./bin/php-dep analyze
 
 # Analyze a specific project
-./bin/php-dep analyze /path/to/project/src
-
-# JSON output (for scripts, CI, jq…)
-./bin/php-dep analyze src/ --format=json -q
-
-# Zoom in on a class
-./bin/php-dep analyze src/ --class='App\Service\UserService'
+./bin/php-dep analyze /path/to/project/src > graph.json
 ```
 
 ## `analyze` command
@@ -45,69 +39,37 @@ php-dep analyze [<path>] [options]
 
 | Option | Shortcut | Description |
 |---|---|---|
-| `--format=text\|json` | `-f` | Output format (default: `text`) |
-| `--class=FQCN` | `-c` | Focus on a class (full FQCN) |
-| `--sort=alpha\|deps\|fanin` | `-s` | Table sort: alphabetical, number of outgoing dependencies, number of incoming dependencies (default: `alpha`) |
-| `--limit=N` | `-l` | Limit output to N classes |
 | `--exclude=dir` | | Exclude a directory (can be used multiple times) |
 | `--include-vendor` | | Include the `vendor/` directory in the analysis |
-| `--skip-docblocks` | | Ignore `@param`/`@return`/`@throws` annotations |
-| `--quiet` | `-q` | Suppresses the progress bar and warnings (stdout preserved) |
-| `--verbose` | `-v` | Show warning details |
+| `--docblocks` | | Also read `@param`/`@return`/`@var`/`@throws` annotations |
+| `--workers=N` | `-w` | Number of parallel processes (default: the CPU count, `1` to stay sequential) |
 
 ### Exit codes
 
 | Code | Meaning |
 |---|---|
 | `0` | Success |
-| `1` | Parsing error(s) |
-| `2` | Internal error |
-| `3` | Invalid arguments |
+| `1` | Parsing error(s) or analysis failure |
+| `2` | Invalid arguments |
 
 ---
 
 ## Examples
 
-### Project overview
-
-```bash
-./bin/php-dep analyze src/
-```
-
-Displays a table with, for each class: type, number of outgoing dependencies (what it uses), incoming dependencies (what uses it), and source file.
-
-### Find the most coupled classes
-
-```bash
-# Highest dependency consumers
-./bin/php-dep analyze src/ --sort=deps --limit=10
-
-# Most used by others (high fan-in)
-./bin/php-dep analyze src/ --sort=fanin --limit=10
-```
-
-### Inspect a class
-
-```bash
-./bin/php-dep analyze src/ --class='PhpDep\Parser\PhpFileParser' -v
-```
-
-Displays two tables: what the class uses (outgoing dependencies) and who uses it (incoming dependencies), with the relationship type and source line.
-
 ### JSON pipeline with `jq`
 
 ```bash
 # Count classes
-./bin/php-dep analyze src/ -f json -q | jq '.meta.class_count'
+./bin/php-dep analyze src/ | jq '.meta.class_count'
 
 # List all inheritance relationships
-./bin/php-dep analyze src/ -f json -q | jq '[.edges[] | select(.type == "extends")]'
+./bin/php-dep analyze src/ | jq '[.edges[] | select(.type == "extends")]'
 
 # Find classes with no dependants (leaves)
-./bin/php-dep analyze src/ -f json -q | jq '[.classes[] | select(.dependants | length == 0) | .fqcn]'
+./bin/php-dep analyze src/ | jq '[.classes[] | select(.dependants | length == 0) | .fqcn]'
 
 # Find dependencies of a specific class
-./bin/php-dep analyze src/ -f json -q | jq '.classes[] | select(.fqcn == "App\\Service\\UserService") | .dependencies'
+./bin/php-dep analyze src/ | jq '.classes[] | select(.fqcn == "App\\Service\\UserService") | .dependencies'
 ```
 
 ### Exclude directories
@@ -148,6 +110,7 @@ To analyze the vendor itself:
       "type": "class",      // class | interface | trait | enum
       "file": "/path/to/UserService.php",
       "line": 12,
+      "abstract": false,    // true for an abstract class only
       "dependencies": ["App\\Repository\\UserRepository", "Psr\\Log\\LoggerInterface"],
       "dependants":   ["App\\Controller\\UserController"]
     }
@@ -185,9 +148,11 @@ To analyze the vendor itself:
 | `extends` | Class or interface inheritance |
 | `implements` | Interface implementation |
 | `uses_trait` | Trait usage |
-| `param_type` | Type hint on a method parameter |
-| `return_type` | Method return type |
+| `param_type` | Type hint on a parameter of a method, closure or arrow function |
+| `return_type` | Return type of a method, closure or arrow function |
 | `property_type` | Class property type |
+| `constant_type` | Typed class constant (PHP 8.3) |
+| `attribute` | `#[Foo]` on a class, method, property, parameter or constant |
 | `instantiates` | `new Foo()` |
 | `static_call` | `Foo::method()` |
 | `static_property` | `Foo::$prop` |
@@ -197,7 +162,7 @@ To analyze the vendor itself:
 
 ### Tier 2 — High confidence (docblocks)
 
-Extracted from `@param`, `@return`, `@var`, `@throws`. Confidence: `high`.
+Read only with `--docblocks`, from `@param`, `@return`, `@var`, `@throws`. Confidence: `high`.
 
 | Type | Source |
 |---|---|
@@ -225,7 +190,7 @@ Extracted from `@param`, `@return`, `@var`, `@throws`. Confidence: `high`.
 | `dynamic_call` | Unresolvable dynamic call |
 | `parse_error` | Invalid or unreadable PHP file |
 
-Warnings are printed to `stderr`. The JSON output includes them in `warnings[]`. With `-v`, the text output lists them at the end of the report.
+The JSON output includes them in `warnings[]`.
 
 ---
 
@@ -233,8 +198,9 @@ Warnings are printed to `stderr`. The JSON output includes them in `warnings[]`.
 
 - **Discovery**: `git ls-files` if inside a git repository, otherwise `RecursiveDirectoryIterator`. The `vendor/`, `node_modules/`, and `.git/` directories are excluded by default.
 - **Parsing**: [nikic/PHP-Parser](https://github.com/nikic/PHP-Parser) v5. The `NameResolver` runs first in the traverser: all downstream names are resolved FQCNs.
-- **Docblocks**: [phpstan/phpdoc-parser](https://github.com/phpstan/phpdoc-parser) for `@param`, `@return`, `@var`, `@throws`.
-- **Memory**: each file's AST is freed immediately after extraction (streaming). Only one AST in memory at a time.
+- **Parallelism**: with the `pcntl` extension, the files are spread over forked processes; without it, they are parsed one after the other. The output is the same whatever the number of workers.
+- **Docblocks**: [phpstan/phpdoc-parser](https://github.com/phpstan/phpdoc-parser) for `@param`, `@return`, `@var`, `@throws`, with `--docblocks`.
+- **Memory**: each file's AST is freed immediately after extraction. Each process holds one AST at a time.
 - **Vendor**: in `boundary` mode (default), vendor classes are `external` nodes (leaves) — their files are not analyzed.
 
 ## Requirements

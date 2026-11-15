@@ -7,8 +7,8 @@ namespace PhpDep\Analyzer;
 final readonly class AnalyzerConfig
 {
     public function __construct(
-        /** Skip @param/@return/@var/@throws docblock analysis */
-        public bool   $skipDocblocks  = false,
+        /** Read @param/@return/@var/@throws docblocks too */
+        public bool   $docblocks      = false,
 
         /** Exclude vendor directory from file discovery */
         public bool   $excludeVendor  = true,
@@ -26,5 +26,8 @@ final readonly class AnalyzerConfig
 
         /** Only include files matching these glob patterns (empty = all) */
         public array  $includePatterns = [],
+
+        /** Processes parsing the files in parallel */
+        public int    $workers        = 1,
     ) {}
 }

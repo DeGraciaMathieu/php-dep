@@ -11,6 +11,8 @@ final readonly class GraphNode
         public NodeType $type,
         public ?string  $file = null,
         public ?int     $line = null,
+        /** Only an abstract class: an interface is told by its type */
+        public bool     $abstract = false,
     ) {}
 
     public function isExternal(): bool
@@ -25,6 +27,7 @@ final readonly class GraphNode
             'type' => $this->type->value,
             'file' => $this->file,
             'line' => $this->line,
+            'abstract' => $this->abstract,
         ];
     }
 }

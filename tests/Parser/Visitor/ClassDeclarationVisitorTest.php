@@ -37,6 +37,15 @@ final class ClassDeclarationVisitorTest extends TestCase
         self::assertSame(NodeType::CLASS_NODE, $nodes[0]->type);
     }
 
+    public function testMarksAbstractClass(): void
+    {
+        $nodes = $this->traverse('<?php namespace App; abstract class Base {} class Foo {} interface IFoo {}')->getNodes();
+
+        self::assertTrue($nodes[0]->abstract);
+        self::assertFalse($nodes[1]->abstract);
+        self::assertFalse($nodes[2]->abstract);
+    }
+
     public function testExtractsInterface(): void
     {
         $visitor = $this->traverse('<?php namespace App; interface IFoo {}');

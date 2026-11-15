@@ -11,17 +11,18 @@ use PhpDep\Parser\TypeResolver;
 use PhpDep\Warning\AnalysisWarning;
 use PhpDep\Warning\WarningType;
 use PhpParser\Node;
+use PhpParser\Node\Attribute;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\Instanceof_;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Expr\StaticPropertyFetch;
+use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Catch_;
 use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\Enum_;
-use PhpParser\Node\Stmt\EnumCase;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Trait_;
@@ -77,9 +78,9 @@ final class RelationshipVisitor extends NodeVisitorAbstract
             }
         }
 
-        // Method type hints
-        if ($node instanceof ClassMethod) {
-            $this->extractMethodTypeHints($source, $node);
+        // Methods, closures and arrow functions type hints
+        if ($node instanceof FunctionLike) {
+            $this->extractFunctionTypeHints($source, $node);
         }
 
         // Property type hints
@@ -87,6 +88,18 @@ final class RelationshipVisitor extends NodeVisitorAbstract
             foreach ($this->typeResolver->resolve($node->type) as $fqcn) {
                 $this->addEdge($source, $fqcn, EdgeType::PROPERTY_TYPE, Confidence::CERTAIN, $node->getStartLine());
             }
+        }
+
+        // Typed class constants (PHP 8.3)
+        if ($node instanceof ClassConst) {
+            foreach ($this->typeResolver->resolve($node->type) as $fqcn) {
+                $this->addEdge($source, $fqcn, EdgeType::CONSTANT_TYPE, Confidence::CERTAIN, $node->getStartLine());
+            }
+        }
+
+        // #[Foo]
+        if ($node instanceof Attribute) {
+            $this->addEdge($source, (string) $node->name, EdgeType::ATTRIBUTE, Confidence::CERTAIN, $node->getStartLine());
         }
 
         // new Foo()
@@ -174,15 +187,15 @@ final class RelationshipVisitor extends NodeVisitorAbstract
         }
     }
 
-    private function extractMethodTypeHints(string $source, ClassMethod $node): void
+    private function extractFunctionTypeHints(string $source, FunctionLike $node): void
     {
-        foreach ($node->params as $param) {
+        foreach ($node->getParams() as $param) {
             foreach ($this->typeResolver->resolve($param->type) as $fqcn) {
                 $this->addEdge($source, $fqcn, EdgeType::PARAM_TYPE, Confidence::CERTAIN, $param->getStartLine());
             }
         }
 
-        foreach ($this->typeResolver->resolve($node->returnType) as $fqcn) {
+        foreach ($this->typeResolver->resolve($node->getReturnType()) as $fqcn) {
             $this->addEdge($source, $fqcn, EdgeType::RETURN_TYPE, Confidence::CERTAIN, $node->getStartLine());
         }
     }

@@ -41,6 +41,22 @@ final class ProjectAnalyzerTest extends TestCase
         rmdir($dir);
     }
 
+    public function testParallelAnalysisGivesTheSameGraphAsSequential(): void
+    {
+        for ($i = 0; $i < 10; $i++) {
+            $next = $i + 1;
+            file_put_contents($this->tmpDir . "/C{$i}.php", "<?php namespace App; class C{$i} { public function run(C{$next} \$c): void {} }");
+        }
+        file_put_contents($this->tmpDir . '/bad.php', '<?php this is not valid ??? !!!');
+
+        $sequential = $this->analyzer->analyze($this->tmpDir, new AnalyzerConfig(workers: 1));
+        $parallel   = $this->analyzer->analyze($this->tmpDir, new AnalyzerConfig(workers: 4));
+
+        self::assertEquals($sequential['graph']->getAllNodes(), $parallel['graph']->getAllNodes());
+        self::assertEquals($sequential['graph']->getAllEdges(), $parallel['graph']->getAllEdges());
+        self::assertEquals($sequential['warnings'], $parallel['warnings']);
+    }
+
     public function testAnalyzeEmptyDirectoryReturnsEmptyResult(): void
     {
         $result = $this->analyzer->analyze($this->tmpDir, new AnalyzerConfig());
@@ -77,27 +93,7 @@ final class ProjectAnalyzerTest extends TestCase
         self::assertSame(3, $result['file_count']);
     }
 
-    public function testProgressCallbackIsCalledForEachFile(): void
-    {
-        file_put_contents($this->tmpDir . '/A.php', '<?php class A {}');
-        file_put_contents($this->tmpDir . '/B.php', '<?php class B {}');
-
-        $calls = [];
-        $this->analyzer->analyze(
-            $this->tmpDir,
-            new AnalyzerConfig(),
-            function (string $file, int $current, int $total) use (&$calls): void {
-                $calls[] = ['file' => $file, 'current' => $current, 'total' => $total];
-            },
-        );
-
-        self::assertCount(2, $calls);
-        self::assertSame(2, $calls[0]['total']);
-        self::assertSame(1, $calls[0]['current']);
-        self::assertSame(2, $calls[1]['current']);
-    }
-
-    public function testAnalyzeWithNoProgressCallbackDoesNotThrow(): void
+    public function testCountsAnalyzedFiles(): void
     {
         file_put_contents($this->tmpDir . '/A.php', '<?php class A {}');
 

@@ -9,9 +9,8 @@ use PhpDep\Graph\GraphEdge;
 use PhpDep\Graph\GraphNode;
 use PhpDep\Warning\AnalysisWarning;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Output\StreamOutput;
 
-final class JsonFormatter implements FormatterInterface
+final class JsonFormatter
 {
     public function format(
         DependencyGraph $graph,
@@ -48,19 +47,6 @@ final class JsonFormatter implements FormatterInterface
             'edges'    => array_map(fn(GraphEdge $e) => $e->toArray(), $allEdges),
             'warnings' => array_map(fn(AnalysisWarning $w) => $w->toArray(), $warnings),
         ];
-
-        // Apply --class filter if provided
-        if (!empty($options['class'])) {
-            $fqcn = $options['class'];
-            $result['classes'] = array_values(array_filter(
-                $result['classes'],
-                fn(array $c) => $c['fqcn'] === $fqcn,
-            ));
-            $result['edges'] = array_values(array_filter(
-                $result['edges'],
-                fn(array $e) => $e['source'] === $fqcn || $e['target'] === $fqcn,
-            ));
-        }
 
         // Always write JSON regardless of verbosity/quiet mode — use STDOUT directly
         $output->write(
